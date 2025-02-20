@@ -1,0 +1,38 @@
+#pragma once
+
+#include "Camera.h"
+#include "FBO.h"
+#include <chrono>
+#include <memory>
+#include <vector>
+
+class CameraManager {
+public:
+  CameraManager();
+
+  void AddCamera(std::shared_ptr<Camera> camera);
+  void AddFBO(std::shared_ptr<FBO> fbo) { mFrameBuffers.push_back(fbo); }
+  void Remove();
+
+  bool HandleSwitching(GLFWwindow *window);
+  void SwitchNext();
+  void SwitchPrevious();
+
+  void ShowCameras();
+
+  std::shared_ptr<Camera> GetCamera();
+  std::shared_ptr<FBO> GetFBO();
+  const int GetCount() const { return mCameras.size(); }
+
+  const int GetSelectedId() const { return mSelectedCameraId; }
+
+private:
+  std::vector<std::shared_ptr<Camera>> mCameras;
+  std::vector<std::shared_ptr<FBO>> mFrameBuffers;
+  std::vector<std::string> mCameraNames;
+  int mSelectedCameraId = 0;
+
+  float mCooldown = 0.25f;
+  std::chrono::time_point<std::chrono::high_resolution_clock> mPrevPress;
+  bool mSwitched = true;
+};

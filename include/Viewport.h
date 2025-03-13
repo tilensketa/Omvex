@@ -45,6 +45,7 @@ private:
   std::unique_ptr<Shader> mFlatShader;
   std::unique_ptr<Shader> mSegmentedShader;
   std::unique_ptr<Shader> mBgQuadShader;
+  std::unique_ptr<Shader> mRayTraceShader;
 
   MeshManager mMeshManager;
 
@@ -60,6 +61,7 @@ private:
   TextureManager mTextureManager;
   std::shared_ptr<Texture> mBgTexture;
   std::unique_ptr<Quad> mBgQuad;
+  std::unique_ptr<Quad> mRayTraceQuad;
 
   ViewMode mViewMode = ViewMode::Shaded;
 

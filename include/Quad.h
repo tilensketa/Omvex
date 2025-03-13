@@ -9,7 +9,7 @@ public:
     Quad();
     ~Quad();
 
-    void Draw(Shader& shader);
+    void Draw(Shader& shader, bool drawTexture);
     void SetTexture(unsigned int textureID);
     
 private:

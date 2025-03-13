@@ -12,7 +12,7 @@ public:
 
   void AddCamera(std::shared_ptr<Camera> camera);
   void AddFBO(std::shared_ptr<FBO> fbo) { mFrameBuffers.push_back(fbo); }
-  void Remove();
+  bool Remove();
 
   bool HandleSwitching(GLFWwindow *window);
   void SwitchNext();

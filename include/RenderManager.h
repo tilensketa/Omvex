@@ -4,7 +4,7 @@
 #include "FBO.h"
 #include <string>
 
-enum ViewMode { Flat = 0, Shaded, Segmented };
+enum ViewMode { Flat = 0, Shaded, Segmented, Realistic };
 
 class RenderManager {
 public:

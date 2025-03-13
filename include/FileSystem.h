@@ -1,5 +1,3 @@
-#pragma once
-
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -13,10 +11,9 @@ namespace fs = std::filesystem;
 
 namespace FileSystem {
 
-inline std::string GetDirectory(const std::string &filePath) {
-  return filePath;
-  // return std::filesystem::path(filePath).parent_path().string();
-}
+enum Extension { IMAGE, JSON };
+
+// Select folder with start path and return it
 inline std::string SelectFolder(const std::string &path) {
   auto f = pfd::select_folder("Select folder", path);
   std::string file = f.result();
@@ -24,7 +21,9 @@ inline std::string SelectFolder(const std::string &path) {
 }
 
 // Helper function to split the string into patterns
+// *.jpg *.jpeg *.png -> {*.jpg, *.jpeg, *.png}
 inline std::vector<std::string> splitPatterns(const std::string &patterns) {
+  std::cout << patterns << std::endl;
   std::vector<std::string> result;
   size_t start = 0, end;
   while ((end = patterns.find(' ', start)) != std::string::npos) {
@@ -35,10 +34,13 @@ inline std::vector<std::string> splitPatterns(const std::string &patterns) {
   if (start < patterns.size()) {
     result.push_back(patterns.substr(start));
   }
+  for (std::string &s : result)
+    std::cout << s << std::endl;
   return result;
 }
 
 // Helper function to check if a file matches a pattern
+// - pattern *.txt
 inline bool matchesPattern(const std::string &filename,
                            const std::string &pattern) {
   // Extract the extension from the pattern (e.g., "*.txt" -> "txt")
@@ -55,27 +57,26 @@ inline bool matchesPattern(const std::string &filename,
   return fileExtension == patternExtension;
 }
 
-inline std::string OpenFile(std::string &path, const std::string &name,
-                            const std::string &exts) {
+inline std::vector<std::string>
+OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
+  std::vector<std::string> filesToOpen;
   if (path == "") {
     path = pfd::path::home();
   }
-  auto f = pfd::open_file("Choose files to read", path, {name, exts});
-  if (f.result().size() == 1) {
-    std::string file = f.result()[0];
-    std::vector<std::string> parsedPatterns = splitPatterns(exts);
+  auto f = pfd::open_file("Choose files to read", path, {name, exts},
+                          pfd::opt::multiselect);
+  std::vector<std::string> parsedPatterns = splitPatterns(exts);
+  for (const std::string &file : f.result()) {
     for (const auto &pattern : parsedPatterns) {
       if (matchesPattern(file, pattern)) {
-        std::string msg = "Open file: " + file;
-        Logger::getInstance().Log(msg, LogLevel::DEBUG);
-        path = GetDirectory(file);
-        return file;
+        Logger::getInstance().Log("Open file: " + file, LogLevel::DEBUG);
+        filesToOpen.push_back(file);
       }
     }
   }
-  Logger::getInstance().Log("Open file: NOT SELECTED", LogLevel::DEBUG);
-  return "";
+  return filesToOpen;
 }
+
 inline std::string SaveFile(std::string &path, std::string extension) {
   if (path == "") {
     path = pfd::path::home();
@@ -84,9 +85,7 @@ inline std::string SaveFile(std::string &path, std::string extension) {
   std::string file = f.result();
   if (file != "") {
     file += extension;
-    std::string msg = "Save file: " + file;
-    Logger::getInstance().Log(msg, LogLevel::DEBUG);
-    path = GetDirectory(file);
+    Logger::getInstance().Log("Save file: " + file, LogLevel::DEBUG);
     return file;
   }
   Logger::getInstance().Log("Save file: NOT SELECTED", LogLevel::DEBUG);
@@ -98,8 +97,8 @@ CheckFileValidExtension(const std::string &filePath,
                         const std::vector<std::string> &validExtensions) {
   std::filesystem::path path(filePath);
   std::string extension = path.extension().string();
-  std::string msg = "file: " + filePath + ", ext: " + extension;
-  Logger::getInstance().Log(msg, LogLevel::DEBUG);
+  Logger::getInstance().Log("File: " + filePath + ", Ext: " + extension,
+                            LogLevel::DEBUG);
   if (std::find(validExtensions.begin(), validExtensions.end(), extension) !=
       validExtensions.end()) {
     return true;

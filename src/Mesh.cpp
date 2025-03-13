@@ -34,8 +34,6 @@ void Mesh::Draw(Shader &shader, Camera &camera, GLuint mode) const {
 void Mesh::SetTransform(const glm::mat4 &mat) { mModel = mat; }
 
 Mesh Mesh::CreatePlane(float size, const glm::vec3 &color) {
-  // glm::vec3 color = glm::vec3(0.8f);
-
   glm::vec3 normal = glm::vec3(0, 0, 1);
   std::vector<Vertex> vertices = {
       {glm::vec3(size / 2, size / 2, 0), color, normal},
@@ -194,10 +192,10 @@ Mesh Mesh::CreateSphere(float radius, const glm::vec3 &color) {
 }
 
 Mesh Mesh::CreateCamera() {
-  glm::vec3 color = glm::vec3(0);
-  float x = 0.5f;
-  float y = 0.5f;
-  float z = 0.25f;
+  glm::vec3 color = glm::vec3(1,0,1);
+  float x = 5.5f;
+  float y = 5.5f;
+  float z = 2.25f;
   std::vector<Vertex> vertices = {{glm::vec3(0, 0, 0), color, color},
                                   {glm::vec3(x, -y, z), color, color},
                                   {glm::vec3(x, y, z), color, color},
@@ -205,4 +203,52 @@ Mesh Mesh::CreateCamera() {
                                   {glm::vec3(x, y, -z), color, color}};
   std::vector<unsigned int> indices = {0, 1, 3, 0, 1, 2, 0, 2, 4, 0, 3, 4};
   return Mesh(vertices, indices);
+}
+
+Mesh Mesh::CreateFrustum(const Camera& cam, float nearPlane, float farPlane, const glm::vec3& color) {
+    // Compute the width and height of the near and far planes
+  glm::mat3 K = cam.GetParameters().Intrinsic;
+    float halfW_near = nearPlane * (K[2][0] / K[0][0]);
+    float halfH_near = nearPlane * (K[2][1] / K[1][1]);
+    float halfW_far = farPlane * (K[2][0] / K[0][0]);
+    float halfH_far = farPlane * (K[2][1] / K[1][1]);
+
+    // Frustum corners in camera space
+    std::vector<glm::vec4> frustumPoints = {
+        {-halfW_near, -halfH_near, nearPlane, 1.0f}, // Near bottom left
+        { halfW_near, -halfH_near, nearPlane, 1.0f}, // Near bottom right
+        {-halfW_near,  halfH_near, nearPlane, 1.0f}, // Near top left
+        { halfW_near,  halfH_near, nearPlane, 1.0f}, // Near top right
+        {-halfW_far,  -halfH_far,  farPlane, 1.0f},  // Far bottom left
+        { halfW_far,  -halfH_far,  farPlane, 1.0f},  // Far bottom right
+        {-halfW_far,   halfH_far,  farPlane, 1.0f},  // Far top left
+        { halfW_far,   halfH_far,  farPlane, 1.0f}   // Far top right
+    };
+
+    // Transform frustum points from camera space to world space
+    glm::mat4 invRT = glm::inverse(cam.GetMatrix());
+    std::vector<Vertex> frustumVertices;
+    for (auto& pt : frustumPoints) {
+        glm::vec4 worldPt = invRT * pt;
+        frustumVertices.push_back({glm::vec3(worldPt), color, glm::vec3(0.0f)});
+        // frustumVertices.push_back({pt, color, glm::vec3(0.0f)});
+    }
+
+    // Define indices for frustum faces
+    std::vector<unsigned int> frustumIndices = {
+        // Near plane
+        0, 1, 3, 0, 3, 2,
+        // Far plane
+        4, 5, 7, 4, 7, 6,
+        // Left plane
+        0, 2, 6, 0, 6, 4,
+        // Right plane
+        1, 3, 7, 1, 7, 5,
+        // Top plane
+        2, 3, 7, 2, 7, 6,
+        // Bottom plane
+        0, 1, 5, 0, 5, 4
+    };
+
+    return Mesh(frustumVertices, frustumIndices, "Frustum");
 }

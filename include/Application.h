@@ -13,14 +13,14 @@
 #include <chrono>
 #include <memory>
 
-enum Mode { CameraCalibration, Viewport3d };
+enum Mode { CameraCalibration, Viewport3d};
 
 class Application {
 public:
   Application();
   ~Application();
 
-  void run();
+  void Run();
 
 private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)>

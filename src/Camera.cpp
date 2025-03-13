@@ -5,26 +5,34 @@ Camera::Camera(int width, int height, glm::vec3 position) {
   mResolution = glm::ivec2(width, height);
   mFOV = 45.0f;
   mPosition = position;
-  mFront = glm::vec3(-1, 0, 0);
+  mTarget = glm::vec3(0);
   mUp = glm::vec3(0, 0, 1);
   mAspectRatio = (float)mResolution.x / (float)mResolution.y;
+  mYaw = 0.0f;
+  mPitch = 0.0f;
+  mRoll = 0.0f;
 }
 
 void Camera::UpdateMatrix() {
   if (mStatic)
     return;
 
-  // Create view matrix
-  mView = glm::lookAt(mPosition, mPosition + mFront, mUp);
+  if (mMode == Mode::ORBIT) {
+    updateOrbitViewMatrix();
+  }
+  mProjection =
+      glm::perspective(glm::radians(mFOV), mAspectRatio, mNearPlane, mFarPlane);
 
-  float mNearPlane = 0.1f;
-  float mFarPlane = 1000.0f;
+  mMatrix = mProjection * mView;
+}
+void Camera::updateOrbitViewMatrix() {
+  glm::vec3 direction =
+      glm::vec3(cos(glm::radians(mYaw)) * cos(glm::radians(mPitch)),
+                sin(glm::radians(mYaw)) * cos(glm::radians(mPitch)),
+                sin(glm::radians(mPitch)));
 
-  glm::mat4 projection =
-      glm::perspective(glm::radians(mFOV), (float)mResolution.x / mResolution.y,
-                       mNearPlane, mFarPlane);
-
-  mMatrix = projection * mView;
+  mPosition = mTarget - direction * glm::distance(mPosition, mTarget);
+  mView = glm::lookAt(mPosition, mTarget, mUp);
 }
 
 void Camera::Matrix(Shader &shader, const char *uniform) {
@@ -32,120 +40,114 @@ void Camera::Matrix(Shader &shader, const char *uniform) {
 }
 
 void Camera::Inputs(GLFWwindow *window, float ts) {
-  if (mStatic)
-    return;
-  double x;
-  double y;
-  glfwGetCursorPos(window, &x, &y);
-  glm::vec2 mousePos(x, y);
-  glm::vec2 delta = (mousePos - mLastMousePosition) * 0.002f;
-  mLastMousePosition = mousePos;
+  float speed = mMoveSpeed * ts;
 
-  if (!glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)) {
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    return;
+  // Mouse input
+  double xpos, ypos;
+  glfwGetCursorPos(window, &xpos, &ypos);
+
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    if (mFirstMouse) {
+      mLastMouseX = xpos;
+      mLastMouseY = ypos;
+      mFirstMouse = false;
+    }
+
+    float dx = static_cast<float>(xpos - mLastMouseX);
+    float dy = static_cast<float>(ypos - mLastMouseY);
+    rotate(-dx, dy);
+  } else {
+    mFirstMouse = true;
   }
 
-  // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-  glm::vec3 right = glm::cross(mFront, mUp);
-
-  // Position
-  if (glfwGetKey(window, GLFW_KEY_W)) {
-    mPosition += mFront * mMoveSpeed * ts;
-  } else if (glfwGetKey(window, GLFW_KEY_S)) {
-    mPosition -= mFront * mMoveSpeed * ts;
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    float dx = static_cast<float>(xpos - mLastMouseX) * 0.01f;
+    float dy = static_cast<float>(ypos - mLastMouseY) * 0.01f;
+    pan(dx, dy);
   }
 
-  if (glfwGetKey(window, GLFW_KEY_A)) {
-    mPosition -= right * mMoveSpeed * ts;
-  } else if (glfwGetKey(window, GLFW_KEY_D)) {
-    mPosition += right * mMoveSpeed * ts;
-  }
+  mLastMouseX = xpos;
+  mLastMouseY = ypos;
 
-  if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-    mPosition += mUp * mMoveSpeed * ts;
-  } else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL)) {
-    mPosition -= mUp * mMoveSpeed * ts;
-  }
-
-  // Rotation
-  if (delta.x != 0.0f || delta.y != 0.0f) {
-    float pitchDelta = delta.y * mRotateSpeed;
-    float yawDelta = delta.x * mRotateSpeed;
-
-    glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, right),
-                                            glm::angleAxis(-yawDelta, mUp)));
-    mFront = glm::rotate(q, mFront);
-    UpdateMatrix();
-  }
+  // Scroll input for zoom
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    zoom(mSensitivity);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    zoom(-mSensitivity);
 }
 
 void Camera::OnResize(const glm::vec2 &newResolution) {
   mResolution = newResolution;
   UpdateMatrix();
 }
-void Camera::SetTransformation(const glm::vec3 &translation,
-                               const glm::mat3 &rotation) {
-  mStatic = true;
-
-  glm::vec3 mPosition = translation;
-
-  glm::mat3 Rt = glm::transpose(rotation);
-
-  glm::mat4 view = glm::mat4(0.0f);
-  view[0] = glm::vec4(rotation[0], 0.0f); // First row (right vector)
-  view[1] = glm::vec4(rotation[1], 0.0f); // Second row (up vector)
-  view[2] = glm::vec4(rotation[2], 0.0f); // Third row (forward vector)
-  view[3] = glm::vec4(translation, 1.0f); // Translation
-                                          //
-
-  glm::mat4 projection = glm::mat4(1.0f);
-  float mNearPlane = 0.1f;
-  float mFarPlane = 1000.0f;
-  projection =
-      glm::perspective(glm::radians(mFOV), (float)mResolution.x / mResolution.y,
-                       mNearPlane, mFarPlane);
-
-  mMatrix = projection * view;
-}
 
 void Camera::SetParameters(const CameraParameters &params) {
+  mParameters = std::make_unique<CameraParameters>(params);
   mStatic = true;
 
   glm::vec3 translation = params.Translation;
   glm::mat3 rotation = params.Rotation;
-  glm::mat3 intrinsics = params.Intrinsic;
   glm::ivec2 imageSize = params.ImageCalibratedSize;
-  float fx = intrinsics[0][0];
-  float fy = intrinsics[1][1];
-  float cx = intrinsics[2][0];
-  float cy = intrinsics[2][1];
+  float fy = params.Intrinsic[1][1];
 
-  float nearPlane = 0.1f;
-  float farPlane = 1000.0f;
-
+  // From OpenCV to OpenGL to myCoord
   mPosition = translation;
   mPosition[2] *= -1.0f;
-
-  mFront = rotation[2];
-  mFront[2] *= -1.0f;
-  // mUp = glm::vec3(0,0,1);
-  mUp = rotation[1];
+  glm::vec3 forward = glm::normalize(rotation[2]);
+  forward[2] *= -1.0f;
+  mUp = glm::normalize(rotation[1]);
   mUp[2] *= -1.0f;
-  // mUp = glm::vec3(0,0,1);
+  mTarget = mPosition + forward;
 
-  glm::mat4 proj = glm::mat4(0.0f);
-  proj[0][0] = 2.0f * fx / imageSize.x;
-  proj[1][1] = 2.0f * fy / imageSize.y;
-  proj[2][0] = 1.0f - 2.0f * cx / imageSize.x;
-  proj[2][1] = 2.0f * cy / imageSize.y - 1.0f;
-  proj[2][2] = -(farPlane + nearPlane) / (farPlane - nearPlane);
-  proj[2][3] = -1.0f;
-  proj[3][2] = -2.0f * farPlane * nearPlane / (farPlane - nearPlane);
+  mView = glm::lookAt(mPosition, mTarget, mUp);
+
+  // Vertical FoV based on intrinsics
+  float fovY = 2.0f * atan(imageSize.y / (2.0f * fy));
+  float aspectRatio =
+      static_cast<float>(imageSize.x) / static_cast<float>(imageSize.y);
+  mProjection = glm::perspective(fovY, aspectRatio, mNearPlane, mFarPlane);
 
   mBgImage = params.RefImageFilePath;
 
-  mView = glm::lookAt(mPosition, mPosition + mFront, mUp);
-  mMatrix = proj * mView;
+  mMatrix = mProjection * mView;
+}
+
+// Move camera
+void Camera::move(glm::vec3 delta) {
+  if (mMode == Mode::ORBIT) {
+    mTarget += delta;
+  }
+  UpdateMatrix();
+}
+
+// Rotate camera
+void Camera::rotate(float deltaYaw, float deltaPitch) {
+  mYaw += deltaYaw * mSensitivity;
+  mPitch += deltaPitch * mSensitivity;
+
+  // Clamp pitch to prevent flipping
+  mPitch = glm::clamp(mPitch, -80.0f, 80.0f);
+
+  UpdateMatrix();
+}
+
+// Zoom camera
+void Camera::zoom(float delta) {
+  if (mMode == Mode::ORBIT) {
+    glm::vec3 direction = glm::normalize(mTarget - mPosition);
+    mPosition += direction * delta * mMoveSpeed;
+  }
+  UpdateMatrix();
+}
+
+// Pan camera (move horizontally/vertically)
+void Camera::pan(float deltaX, float deltaY) {
+  glm::vec3 right = glm::normalize(glm::cross(mTarget - mPosition, mUp));
+  glm::vec3 upMove = glm::normalize(glm::cross(right, mTarget - mPosition));
+
+  if (mMode == Mode::ORBIT) {
+    mTarget += (right * deltaX + upMove * deltaY) * mMoveSpeed;
+    mPosition += (right * deltaX + upMove * deltaY) * mMoveSpeed;
+  }
+  UpdateMatrix();
 }

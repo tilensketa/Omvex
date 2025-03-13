@@ -28,9 +28,6 @@ void CameraManager::AddCamera(std::shared_ptr<Camera> camera) {
 }
 
 bool CameraManager::HandleSwitching(GLFWwindow *window) {
-  /* if (mCameras.size() <= 1) {
-    return false;
-  } */
   int oldSelectedCameraId = mSelectedCameraId;
   for (int i = 0; i < mCameras.size(); ++i) {
     int key = GLFW_KEY_1 + i;
@@ -57,10 +54,6 @@ bool CameraManager::HandleSwitching(GLFWwindow *window) {
 }
 
 void CameraManager::SwitchPrevious() {
-  /* if (GetCount() <= 1) {
-    mSwitched = false;
-    return;
-  } */
   mSelectedCameraId -= 1;
   if (mSelectedCameraId < 0) {
     mSelectedCameraId = mCameras.size() - 1;
@@ -68,10 +61,6 @@ void CameraManager::SwitchPrevious() {
   mSwitched = true;
 }
 void CameraManager::SwitchNext() {
-  /* if (GetCount() <= 1) {
-    mSwitched = false;
-    return;
-  } */
   mSelectedCameraId += 1;
   if (mSelectedCameraId > mCameras.size() - 1) {
     mSelectedCameraId = 0;
@@ -79,13 +68,15 @@ void CameraManager::SwitchNext() {
   mSwitched = true;
 }
 
-void CameraManager::Remove() {
+bool CameraManager::Remove() {
   if (mCameras.size() > 0 && mFrameBuffers.size() > 0) {
     mCameras.erase(mCameras.begin() + mSelectedCameraId);
     mFrameBuffers.erase(mFrameBuffers.begin() + mSelectedCameraId);
     mCameraNames.erase(mCameraNames.begin() + mSelectedCameraId);
     mSelectedCameraId = 0;
+    return true;
   }
+  return false;
 }
 
 void CameraManager::ShowCameras() {

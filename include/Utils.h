@@ -6,52 +6,52 @@
 
 namespace Utils {
 
-inline std::string Vec2ToString(const glm::vec2 &vec) {
+inline std::string GlmVec2ToString(const glm::vec2 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << "]";
   return oss.str();
 }
-inline std::string Vec3ToString(const glm::vec3 &vec) {
+inline std::string GlmVec3ToString(const glm::vec3 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]";
   return oss.str();
 }
-inline std::string Vec4ToString(const glm::vec4 &vec) {
+inline std::string GlmVec4ToString(const glm::vec4 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.z << "]";
   return oss.str();
 }
 
 // Convert glm::mat3 to string
-inline std::string Mat3ToString(const glm::mat3 &mat) {
+inline std::string GlmMat3ToString(const glm::mat3 &mat) {
   std::ostringstream oss;
   // oss << "[\n";
   for (int i = 0; i < 3; ++i) {
-    oss << "[" << mat[i][0] << ", " << mat[i][1] << ", " << mat[i][2] << "]\n";
+    oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << "]\n";
   }
   // oss << "]";
   return oss.str();
 }
 
 // Convert glm::mat3 to string
-inline std::string Mat3x4ToString(const glm::mat3x4 &mat) {
+inline std::string GlmMat3x4ToString(const glm::mat3x4 &mat) {
   std::ostringstream oss;
   // oss << "[\n";
   for (int i = 0; i < 3; ++i) {
-    oss << "[" << mat[i][0] << ", " << mat[i][1] << ", " << mat[i][2] << ", "
-        << mat[i][3] << "]\n";
+    oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
+        << mat[3][i] << "]\n";
   }
   // oss << "]";
   return oss.str();
 }
 
 // Convert glm::mat4 to string
-inline std::string Mat4ToString(const glm::mat4 &mat) {
+inline std::string GlmMat4ToString(const glm::mat4 &mat) {
   std::ostringstream oss;
   oss << "[\n";
   for (int i = 0; i < 4; ++i) {
-    oss << "[" << mat[i][0] << ", " << mat[i][1] << ", " << mat[i][2] << ", "
-        << mat[i][3] << "]\n";
+    oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
+        << mat[3][i] << "]\n";
   }
   oss << "]";
   return oss.str();

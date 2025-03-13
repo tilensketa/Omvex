@@ -100,7 +100,7 @@ void Application::renderDockingSpaceWithMenuBar() {
   ImGui::PopStyleVar(2); // Restore styles
 }
 
-void Application::run() {
+void Application::Run() {
   double fps = 0;
   float ts = 0;
   while (!glfwWindowShouldClose(mWindow.get())) {

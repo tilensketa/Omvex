@@ -39,6 +39,5 @@ private:
 
   std::string mFolderPath = "/home/tilen/dev/Omvex/images/bg1.jpg";
 
-  // CameraParametersManager mCameraParametersManager;
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
 };

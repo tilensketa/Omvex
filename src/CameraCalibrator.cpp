@@ -9,14 +9,14 @@
 #include <opencv2/opencv.hpp>
 
 void CameraCalibrator::calculateRotationTranslation() {
-  std::vector<cv::Point3f> objectPoints;
-  std::vector<cv::Point2f> imagePoints;
+  std::vector<cv::Point3f> objectPoints(4);
+  std::vector<cv::Point2f> imagePoints(4);
   for (int i = 0; i < 4; i++) {
     const glm::vec3 &obj = mCameraParameters->RCWorldPos[i];
     const glm::vec2 &img = mCameraParameters->RCImagePos[i];
     glm::vec2 scaled_img = img * mImageSize;
-    objectPoints.push_back(cv::Point3f(obj.x, obj.y, obj.z));
-    imagePoints.push_back(cv::Point2f(scaled_img.x, scaled_img.y));
+    objectPoints[i] = cv::Point3f(obj.x, obj.y, obj.z);
+    imagePoints[i] = cv::Point2f(scaled_img.x, scaled_img.y);
   }
   float step = 100;
   float fx = 50;
@@ -84,10 +84,7 @@ glm::vec2 project(const glm::vec2 &A, const glm::vec2 &B) {
 }
 
 CameraCalibrator::CameraCalibrator() {
-  // mCameraParameters = mCameraParametersManager.getCameraParameters("");
   mCameraParameters = std::make_unique<CameraParameters>("");
-  // mTexture =
-  // mTextureManager.getTexture("/home/tilen/dev/Omvex/images/bg1.jpg");
   recalculateGridPoints();
 }
 
@@ -107,7 +104,7 @@ void CameraCalibrator::Update() {
         std::string file = FileSystem::SaveFile(mFolderPath, ".json");
         if (file != "") {
           mCameraParameters->Save(file);
-          mFolderPath = FileSystem::GetDirectory(file);
+          mFolderPath = file;
         }
       }
       ImGui::EndMenu();
@@ -144,6 +141,7 @@ void CameraCalibrator::Update() {
   ImGui::Begin("Settings");
   ImGui::Text("CAMERA CALIBRATION");
   ImGui::Separator();
+
   bool changeDim = ImGui::Checkbox("Dim image", &mCameraParameters->DimImage);
   ImGui::SameLine();
   bool changeGrid =
@@ -182,13 +180,13 @@ void CameraCalibrator::Update() {
   ImGui::PopItemWidth();
 
   ImGui::Text("Translation");
-  ImGui::Text("%s", Utils::Vec3ToString(mCameraParameters->Tvec).c_str());
+  ImGui::Text("%s", Utils::GlmVec3ToString(mCameraParameters->Tvec).c_str());
   ImGui::Text("Rotation");
-  ImGui::Text("%s", Utils::Vec3ToString(mCameraParameters->Rvec).c_str());
+  ImGui::Text("%s", Utils::GlmVec3ToString(mCameraParameters->Rvec).c_str());
   ImGui::Text("Intrinsic");
-  ImGui::Text("%s", Utils::Mat3ToString(mCameraParameters->Intrinsic).c_str());
+  ImGui::Text("%s", Utils::GlmMat3ToString(mCameraParameters->Intrinsic).c_str());
   ImGui::Text("Distorsion");
-  ImGui::Text("%s", Utils::Vec4ToString(mCameraParameters->Distortion).c_str());
+  ImGui::Text("%s", Utils::GlmVec4ToString(mCameraParameters->Distortion).c_str());
   ImGui::End();
   if (changeRCSize0 || changeRCSize1 || changeGrid0 || changeGrid1 ||
       changeDim || changeGrid)
@@ -205,10 +203,10 @@ void CameraCalibrator::Update() {
     ImU32 color = Colors::GetColorVector()[i + 2];
     ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(color));
     ImGui::Text("World %i: %s", i,
-                Utils::Vec2ToString(mCameraParameters->RCWorldPos[i]).c_str());
+                Utils::GlmVec2ToString(mCameraParameters->RCWorldPos[i]).c_str());
     ImGui::Text(
         "Scaled Image %i: %s", i,
-        Utils::Vec2ToString(mCameraParameters->RCImagePos[i] * mImageSize)
+        Utils::GlmVec2ToString(mCameraParameters->RCImagePos[i] * mImageSize)
             .c_str());
     ImGui::PopStyleColor();
   }
@@ -217,10 +215,10 @@ void CameraCalibrator::Update() {
   // ImGui::PushStyleColor(ImGuiCol_Text, Colors::GetColorVector()[7]);
   for (int i = 0; i < 4; i++) {
     ImGui::Text("World: %s",
-                Utils::Vec2ToString(mCameraParameters->CSWorldPos[i]).c_str());
+                Utils::GlmVec2ToString(mCameraParameters->CSWorldPos[i]).c_str());
     ImGui::Text(
         "Scaled image: %s",
-        Utils::Vec2ToString(mCameraParameters->CSImagePos[i] * mImageSize)
+        Utils::GlmVec2ToString(mCameraParameters->CSImagePos[i] * mImageSize)
             .c_str());
   }
   // ImGui::PopStyleColor();
@@ -230,10 +228,10 @@ void CameraCalibrator::Update() {
   for (int i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
     ImGui::Text(
         "World %i: %s", i,
-        Utils::Vec2ToString(mCameraParameters->GridWorldPos[i]).c_str());
+        Utils::GlmVec2ToString(mCameraParameters->GridWorldPos[i]).c_str());
     ImGui::Text(
         "Scaled Img %i: %s", i,
-        Utils::Vec2ToString(mCameraParameters->GridImagePos[i] * mImageSize)
+        Utils::GlmVec2ToString(mCameraParameters->GridImagePos[i] * mImageSize)
             .c_str());
   }
   ImGui::EndChild();
@@ -414,30 +412,34 @@ void CameraCalibrator::recalculate() {
 }
 
 void CameraCalibrator::handleOpenImage() {
-  const std::string &imageFilePath = FileSystem::OpenFile(
+  const std::vector<std::string> &imageFilePaths = FileSystem::OpenFiles(
       mFolderPath, "Image .jpg .jpeg .png", "*.jpg *.jpeg *.png");
-  if (imageFilePath == "")
-    return;
+  for (const std::string &imageFilePath : imageFilePaths) {
+    if (imageFilePath == "")
+      continue;
 
-  if (imageFilePath != mLoadedImageFilename) {
-    mLoadedImageFilename = imageFilePath;
-    mTexture = mTextureManager.getTexture(imageFilePath);
-    mCameraParameters->RefImageFilePath = imageFilePath;
-    mChanged = true;
+    if (imageFilePath != mLoadedImageFilename) {
+      mLoadedImageFilename = imageFilePath;
+      mTexture = mTextureManager.getTexture(imageFilePath);
+      mCameraParameters->RefImageFilePath = imageFilePath;
+      mChanged = true;
+    }
   }
 }
 
 void CameraCalibrator::handleOpenParams() {
-  const std::string &paramFilePath =
-      FileSystem::OpenFile(mFolderPath, "Parameters .json", "*.json");
-  if (paramFilePath == "")
-    return;
-  mCameraParameters->Load(paramFilePath);
-  // mCameraParametersManager.getCameraParameters(paramFilePath);
-  const std::string &refImageFilePath = mCameraParameters->RefImageFilePath;
-  if (refImageFilePath != mLoadedImageFilename) {
-    mLoadedImageFilename = refImageFilePath;
-    mTexture = mTextureManager.getTexture(refImageFilePath);
+  const std::vector<std::string> &paramFilePaths =
+      FileSystem::OpenFiles(mFolderPath, "Parameters .json", "*.json");
+  for (const std::string &paramFilePath : paramFilePaths) {
+    if (paramFilePath == "")
+      continue;
+
+    mCameraParameters->Load(paramFilePath);
+    const std::string &refImageFilePath = mCameraParameters->RefImageFilePath;
+    if (refImageFilePath != mLoadedImageFilename) {
+      mLoadedImageFilename = refImageFilePath;
+      mTexture = mTextureManager.getTexture(refImageFilePath);
+    }
+    mChanged = true;
   }
-  mChanged = true;
 }

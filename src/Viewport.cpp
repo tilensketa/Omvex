@@ -10,6 +10,7 @@ Viewport::Viewport() {
   mCameraParameters = std::make_unique<CameraParameters>("");
 
   mBgQuad = std::make_unique<Quad>();
+  mRayTraceQuad = std::make_unique<Quad>();
 
   // Load all backgrounds
   for (int i = 1; i < 7; i++) {
@@ -26,6 +27,8 @@ Viewport::Viewport() {
                                            SHADER_PATH "/shadedFrag.glsl");
   mBgQuadShader = std::make_unique<Shader>(SHADER_PATH "/quadVert.glsl",
                                            SHADER_PATH "/quadFrag.glsl");
+  mRayTraceShader = std::make_unique<Shader>(SHADER_PATH "/rayTraceVert.glsl",
+                                             SHADER_PATH "/rayTraceFrag.glsl");
 
   if (mBgTexture)
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
@@ -55,6 +58,8 @@ Viewport::Viewport() {
   mShadedShader->SetMat4("matrix", mat);
   mSegmentedShader->Activate();
   mSegmentedShader->SetMat4("matrix", mat);
+  mRayTraceShader->Activate();
+  mRayTraceShader->SetMat4("matrix", mat);
 }
 
 void Viewport::Update(float ts) {
@@ -127,6 +132,10 @@ void Viewport::Update(float ts) {
   ImGui::SameLine();
   if (ImGui::RadioButton("Segmented", mViewMode == ViewMode::Segmented)) {
     mViewMode = ViewMode::Segmented;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Realistic", mViewMode == ViewMode::Realistic)) {
+    mViewMode = ViewMode::Realistic;
   }
 
   mCameraManager.ShowCameras();
@@ -218,35 +227,41 @@ void Viewport::renderSceneToFramebuffer() {
 
   mCamera->UpdateMatrix();
 
-  if (mViewMode == ViewMode::Flat || mViewMode == ViewMode::Shaded) {
+  if (mViewMode == ViewMode::Flat || mViewMode == ViewMode::Shaded ||
+      mViewMode == ViewMode::Realistic) {
     if (mCamera->GetBgImage() != "") {
       glDisable(GL_DEPTH_TEST);
-      mBgQuad->Draw(*mBgQuadShader);
+      mBgQuad->Draw(*mBgQuadShader, true);
       glEnable(GL_DEPTH_TEST);
     }
   }
-  for (int i = 0; i < mMeshManager.GetCount(); i++) {
-    std::shared_ptr<Mesh> &mesh = mMeshManager.GetMeshes()[i];
-    if (mViewMode == ViewMode::Flat) {
-      mesh->Draw(*mFlatShader, *mCamera, GL_LINE_STRIP);
-    } else if (mViewMode == ViewMode::Shaded) {
-      mesh->Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
-    } else if (mViewMode == ViewMode::Segmented) {
-      mSegmentedShader->Activate();
-      glm::vec3 &uniqueColor = mMeshManager.GetSegmentedColors()[i];
-      mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
-      mesh->Draw(*mSegmentedShader, *mCamera, GL_TRIANGLES);
+  if (mViewMode == ViewMode::Realistic) {
+    mRayTraceQuad->Draw(*mRayTraceShader, false);
+  } else {
+    for (int i = 0; i < mMeshManager.GetCount(); i++) {
+      std::shared_ptr<Mesh> &mesh = mMeshManager.GetMeshes()[i];
+      if (mViewMode == ViewMode::Flat) {
+        mesh->Draw(*mFlatShader, *mCamera, GL_LINE_STRIP);
+      } else if (mViewMode == ViewMode::Shaded) {
+        mesh->Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
+      } else if (mViewMode == ViewMode::Segmented) {
+        mSegmentedShader->Activate();
+        glm::vec3 &uniqueColor = mMeshManager.GetSegmentedColors()[i];
+        mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
+        mesh->Draw(*mSegmentedShader, *mCamera, GL_TRIANGLES);
+      }
     }
   }
   mFrameBuffer->Unbind();
 }
 
 void Viewport::handleOpenParams() {
-  const std::string &paramFilePath =
-      FileSystem::OpenFile(mFolderPath, "Parameters .json", "*.json");
-  if (paramFilePath == "")
-    return;
-  addCamera(paramFilePath);
+  const std::vector<std::string> &paramFilePaths =
+      FileSystem::OpenFiles(mFolderPath, "Parameters .json", "*.json");
+  for (const std::string &paramFilePath : paramFilePaths) {
+    if (paramFilePath != "")
+      addCamera(paramFilePath);
+  }
 }
 
 void Viewport::addCamera(const std::string &path) {
@@ -267,10 +282,16 @@ void Viewport::addCamera(const std::string &path) {
 }
 
 void Viewport::removeCamera() {
-  std::string msg =
-      "Remove camera: " + std::to_string(mCameraManager.GetSelectedId());
-  Logger::getInstance().Log(msg, LogLevel::SUCCESS);
-  mCameraManager.Remove();
+  bool result = mCameraManager.Remove();
+  if (result) {
+    std::string msg =
+        "Removed camera: " + std::to_string(mCameraManager.GetSelectedId());
+    Logger::getInstance().Log(msg, LogLevel::SUCCESS);
+  } else {
+    std::string msg = "Failed to remove camera: " +
+                      std::to_string(mCameraManager.GetSelectedId());
+    Logger::getInstance().Log(msg, LogLevel::ERROR);
+  }
   switchCamFBO();
 }
 

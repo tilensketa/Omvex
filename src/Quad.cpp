@@ -42,14 +42,16 @@ Quad::~Quad() {
 void Quad::SetTexture(unsigned int textureID) { texture = textureID; }
 
 // Render Quad
-void Quad::Draw(Shader &shader) {
+void Quad::Draw(Shader &shader, bool drawTexture) {
   shader.Activate();
   glBindVertexArray(VAO);
 
-  // Bind Texture
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  shader.SetInt("uBackgroundTexture", 0);
+  if (drawTexture) {
+    // Bind Texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    shader.SetInt("uBackgroundTexture", 0);
+  }
 
   // Draw Quad
   glDrawArrays(GL_TRIANGLES, 0, 6);

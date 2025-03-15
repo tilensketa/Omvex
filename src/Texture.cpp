@@ -11,6 +11,11 @@ Texture::Texture(const std::string &filePath) {
   mTextureID = loadTexture(filePath);
   mSize = glm::vec2(static_cast<float>(mWidth), static_cast<float>(mHeight));
   mAspectRatio = mSize.x / mSize.y;
+  Logger::getInstance().Debug("Texture: " + mFilePath);
+  Logger::getInstance().Debug("- Id: " + std::to_string(mTextureID));
+  Logger::getInstance().Debug("- Width: " + std::to_string(mWidth));
+  Logger::getInstance().Debug("- Height: " + std::to_string(mHeight));
+  Logger::getInstance().Debug("- Channels: " + std::to_string(mChannels));
 }
 
 Texture::Texture(int width, int height) {
@@ -55,11 +60,9 @@ GLuint Texture::loadTexture(const std::string &filePath) {
   unsigned char *data =
       stbi_load(filePath.c_str(), &mWidth, &mHeight, &mChannels, 0);
   if (!data) {
-    Logger::getInstance().Log("Failed to load texture: " + filePath,
-                              LogLevel::FATAL);
+    Logger::getInstance().Error("Failed to load texture: " + filePath);
   } else {
-    Logger::getInstance().Log("Successfully loaded texture: " + filePath,
-                              LogLevel::SUCCESS);
+    Logger::getInstance().Success("Successfully loaded texture: " + filePath);
   }
 
   // Generate OpenGL texture
@@ -98,10 +101,9 @@ void Texture::Save(const std::string &path) {
 
   // Save as PNG using stb_image_write
   if (stbi_write_png(path.c_str(), mWidth, mHeight, 4, data, mWidth * 4)) {
-    Logger::getInstance().Log("Texture saved to: " + path, LogLevel::SUCCESS);
+    Logger::getInstance().Success("Texture saved to: " + path);
   } else {
-    Logger::getInstance().Log("Failed to save texture: " + path,
-                              LogLevel::FATAL);
+    Logger::getInstance().Error("Failed to save texture: " + path);
   }
 
   // Cleanup

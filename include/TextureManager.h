@@ -12,14 +12,12 @@ public:
     // Check if the texture is already loaded
     auto it = mTextureMap.find(path);
     if (it != mTextureMap.end()) {
-      std::string msg = "Texture already loaded: " + path;
-      Logger::getInstance().Log(msg, LogLevel::INFO);
+      Logger::getInstance().Info("Texture already loaded: " + path);
       return mTextures[it->second];
     }
 
     // Load the texture if not already loaded
-    std::string msg = "Loading and caching new texture: " + path;
-    Logger::getInstance().Log(msg, LogLevel::INFO);
+    Logger::getInstance().Info("Loading and caching new texture: " + path);
     auto texture = std::make_shared<Texture>(path);
     mTextures.push_back(texture);
     mTextureMap[path] = mTextures.size() - 1;

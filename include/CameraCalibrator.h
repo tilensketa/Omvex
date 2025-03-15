@@ -37,7 +37,7 @@ private:
   std::string mLoadedImageFilename = "";
   glm::vec2 mImageSize;
 
-  std::string mFolderPath = "/home/tilen/dev/Omvex/images/bg1.jpg";
+  std::string mFolderPath = "/home/tilen/dev/Omvex/README.md";
 
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
 };

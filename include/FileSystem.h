@@ -11,8 +11,6 @@ namespace fs = std::filesystem;
 
 namespace FileSystem {
 
-enum Extension { IMAGE, JSON };
-
 // Select folder with start path and return it
 inline std::string SelectFolder(const std::string &path) {
   auto f = pfd::select_folder("Select folder", path);
@@ -23,7 +21,6 @@ inline std::string SelectFolder(const std::string &path) {
 // Helper function to split the string into patterns
 // *.jpg *.jpeg *.png -> {*.jpg, *.jpeg, *.png}
 inline std::vector<std::string> splitPatterns(const std::string &patterns) {
-  std::cout << patterns << std::endl;
   std::vector<std::string> result;
   size_t start = 0, end;
   while ((end = patterns.find(' ', start)) != std::string::npos) {
@@ -34,8 +31,6 @@ inline std::vector<std::string> splitPatterns(const std::string &patterns) {
   if (start < patterns.size()) {
     result.push_back(patterns.substr(start));
   }
-  for (std::string &s : result)
-    std::cout << s << std::endl;
   return result;
 }
 
@@ -69,7 +64,7 @@ OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
   for (const std::string &file : f.result()) {
     for (const auto &pattern : parsedPatterns) {
       if (matchesPattern(file, pattern)) {
-        Logger::getInstance().Log("Open file: " + file, LogLevel::DEBUG);
+        Logger::getInstance().Debug("Open file: " + file);
         filesToOpen.push_back(file);
       }
     }
@@ -85,10 +80,10 @@ inline std::string SaveFile(std::string &path, std::string extension) {
   std::string file = f.result();
   if (file != "") {
     file += extension;
-    Logger::getInstance().Log("Save file: " + file, LogLevel::DEBUG);
+    Logger::getInstance().Debug("Save file: " + file);
     return file;
   }
-  Logger::getInstance().Log("Save file: NOT SELECTED", LogLevel::DEBUG);
+  Logger::getInstance().Debug("Save file: NOT SELECTED");
   return "";
 }
 
@@ -97,8 +92,7 @@ CheckFileValidExtension(const std::string &filePath,
                         const std::vector<std::string> &validExtensions) {
   std::filesystem::path path(filePath);
   std::string extension = path.extension().string();
-  Logger::getInstance().Log("File: " + filePath + ", Ext: " + extension,
-                            LogLevel::DEBUG);
+  Logger::getInstance().Debug("File: " + filePath + ", Ext: " + extension);
   if (std::find(validExtensions.begin(), validExtensions.end(), extension) !=
       validExtensions.end()) {
     return true;
@@ -131,7 +125,7 @@ GetFilesWithExtensions(const std::string &folderPath,
   } catch (const std::exception &e) {
     std::string msg =
         "Error accessing folder: " + folderPath + ". Exception: " + e.what();
-    Logger::getInstance().Log(msg, LogLevel::FATAL);
+    Logger::getInstance().Error(msg);
   }
   return files;
 }

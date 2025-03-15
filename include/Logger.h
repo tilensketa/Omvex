@@ -25,15 +25,25 @@ public:
     return instance;
   }
 
-  inline void Log(const std::string &message, LogLevel logLevel) {
-    std::string timeStamp = "[" + getTimestamp() + "] ";
-    auto info = logLevel2ColorType(logLevel);
-    std::string logMessageColor = timeStamp + info.first + info.second + message + COLOR_RESET;
-    std::cout << logMessageColor << std::endl;
-    std::string logMessageNoColor = timeStamp + info.second + message;
-    std::pair<LogLevel, std::string> log = std::make_pair(logLevel, logMessageNoColor);
-    mLogs.push_back(log);
+  inline void Info(const std::string& message){
+    log(message, LogLevel::INFO);
   }
+  inline void Warn(const std::string& message){
+    log(message, LogLevel::WARN);
+  }
+  inline void Error(const std::string& message){
+    log(message, LogLevel::ERROR);
+  }
+  inline void Debug(const std::string& message){
+    log(message, LogLevel::DEBUG);
+  }
+  inline void Success(const std::string& message){
+    log(message, LogLevel::SUCCESS);
+  }
+  inline void Fatal(const std::string& message){
+    log(message, LogLevel::FATAL);
+  }
+
 
   const std::vector<std::pair<LogLevel, std::string>> &GetLogs() const {
     return mLogs;
@@ -46,6 +56,16 @@ private:
   // Prevent copying and assignment (optional but recommended)
   Logger(const Logger &) = delete;
   Logger &operator=(const Logger &) = delete;
+
+  inline void log(const std::string &message, LogLevel logLevel) {
+    std::string timeStamp = "[" + getTimestamp() + "] ";
+    auto info = logLevel2ColorType(logLevel);
+    std::string logMessageColor = timeStamp + info.first + info.second + message + COLOR_RESET;
+    std::cout << logMessageColor << std::endl;
+    std::string logMessageNoColor = timeStamp + info.second + message;
+    std::pair<LogLevel, std::string> log = std::make_pair(logLevel, logMessageNoColor);
+    mLogs.push_back(log);
+  }
 
   // Get the current timestamp as a string
   inline std::string getTimestamp() {

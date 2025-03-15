@@ -4,13 +4,13 @@
 #include "Colors.h"
 #include "Utils.h"
 
-#define SHADER_PATH "../shaders"
+#define SHADER_PATH "../shaders/"
+#define MODEL_PATH "../models/"
 
 Viewport::Viewport() {
   mCameraParameters = std::make_unique<CameraParameters>("");
 
   mBgQuad = std::make_unique<Quad>();
-  mRayTraceQuad = std::make_unique<Quad>();
 
   // Load all backgrounds
   for (int i = 1; i < 7; i++) {
@@ -19,31 +19,15 @@ Viewport::Viewport() {
     addCamera(path);
   }
 
-  mFlatShader = std::make_unique<Shader>(SHADER_PATH "/flatVert.glsl",
-                                         SHADER_PATH "/flatFrag.glsl");
-  mSegmentedShader = std::make_unique<Shader>(
-      SHADER_PATH "/segmentedVert.glsl", SHADER_PATH "/segmentedFrag.glsl");
-  mShadedShader = std::make_unique<Shader>(SHADER_PATH "/shadedVert.glsl",
-                                           SHADER_PATH "/shadedFrag.glsl");
-  mBgQuadShader = std::make_unique<Shader>(SHADER_PATH "/quadVert.glsl",
-                                           SHADER_PATH "/quadFrag.glsl");
-  mRayTraceShader = std::make_unique<Shader>(SHADER_PATH "/rayTraceVert.glsl",
-                                             SHADER_PATH "/rayTraceFrag.glsl");
+  mSegmentedShader = std::make_unique<Shader>(SHADER_PATH "segmentedVert.glsl",
+                                              SHADER_PATH "segmentedFrag.glsl");
+  mShadedShader = std::make_unique<Shader>(SHADER_PATH "shadedVert.glsl",
+                                           SHADER_PATH "shadedFrag.glsl");
+  mBgQuadShader = std::make_unique<Shader>(SHADER_PATH "quadVert.glsl",
+                                           SHADER_PATH "quadFrag.glsl");
 
   if (mBgTexture)
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
-
-  {
-    mMeshManager.AddMesh(std::make_shared<Mesh>(
-        Mesh::CreateCube(16.0f, glm::vec3(0.5f, 0.0f, 0.8f))));
-    mMeshManager.AddMesh(std::make_shared<Mesh>(
-        Mesh::CreateCube(8.0f, glm::vec3(0.9f, 1.0f, 0.5f))));
-    mMeshManager.AddMesh(std::make_shared<Mesh>(
-        Mesh::CreateCube(16.0f, glm::vec3(0.5f, 0.9f, 0.9f))));
-    mPhysicsManager.AddCube(glm::vec3(8, 8, 8));
-    mPhysicsManager.AddCube(glm::vec3(4, 4, 4));
-    mPhysicsManager.AddCube(glm::vec3(8, 8, 8));
-  }
 
   mRenderManager.SetViewMode(&mViewMode);
   mRenderManager.SetCameraManager(&mCameraManager);
@@ -52,14 +36,10 @@ Viewport::Viewport() {
 
   glm::mat4 mat = glm::mat4(1);
   mat[2][2] = -1;
-  mFlatShader->Activate();
-  mFlatShader->SetMat4("matrix", mat);
   mShadedShader->Activate();
   mShadedShader->SetMat4("matrix", mat);
   mSegmentedShader->Activate();
   mSegmentedShader->SetMat4("matrix", mat);
-  mRayTraceShader->Activate();
-  mRayTraceShader->SetMat4("matrix", mat);
 }
 
 void Viewport::Update(float ts) {
@@ -69,6 +49,14 @@ void Viewport::Update(float ts) {
         handleOpenParams();
       } else if (ImGui::MenuItem("Remove")) {
         removeCamera();
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Model")) {
+      if (ImGui::MenuItem("Add")) {
+        handleOpenModel();
+      } else if (ImGui::MenuItem("Remove")) {
+        removeModel();
       }
       ImGui::EndMenu();
     }
@@ -82,7 +70,7 @@ void Viewport::Update(float ts) {
     mPhysicsManager.SetSimulating(true);
     mPhysicsManager.SetSimulationFrame(0);
   }
-  mPhysicsManager.Update(mMeshManager.GetMeshes());
+  mPhysicsManager.Update(mModelManager.GetModels());
 
   bool switchCam = mCameraManager.HandleSwitching(mWindow);
   if (switchCam) {
@@ -90,8 +78,9 @@ void Viewport::Update(float ts) {
   }
   renderSceneToFramebuffer();
 
+  // Render if simulation is over
   bool canRender = !mPhysicsManager.IsSimulating();
-  // mRenderManager.Update(mFrameBuffer, canRender); TODO
+  mRenderManager.Update(mFrameBuffer, canRender);
 
   // First ImGui window with the framebuffer
   ImGui::Begin("MainView");
@@ -133,10 +122,6 @@ void Viewport::Update(float ts) {
   if (ImGui::RadioButton("Segmented", mViewMode == ViewMode::Segmented)) {
     mViewMode = ViewMode::Segmented;
   }
-  ImGui::SameLine();
-  if (ImGui::RadioButton("Realistic", mViewMode == ViewMode::Realistic)) {
-    mViewMode = ViewMode::Realistic;
-  }
 
   mCameraManager.ShowCameras();
   if (ImGui::Button("Add Camera")) {
@@ -147,29 +132,25 @@ void Viewport::Update(float ts) {
     removeCamera();
   }
 
-  mMeshManager.ShowMeshes();
-  if (ImGui::Button("Add Mesh Cube")) {
-    for (int i = 0; i < 10; i++) {
-      glm::vec3 rndColor = Random::Vec3(0, 1);
-      float rndSize = Random::Float(4, 16);
-      float halfSize = rndSize / 2.0f;
-      mMeshManager.AddMesh(
-          std::make_shared<Mesh>(Mesh::CreateCube(rndSize, rndColor)));
-      mPhysicsManager.AddCube(glm::vec3(halfSize, halfSize, halfSize));
-    }
+  mModelManager.ShowModels();
+  if (ImGui::Button("Add Multimeter")) {
+    addModel(MODEL_PATH "Multimeter/multimeter.obj");
   }
   ImGui::SameLine();
-  if (ImGui::Button("Add Mesh Sphere")) {
-    glm::vec3 rndColor = Random::Vec3(0, 1);
-    float radius = Random::Float(2, 8);
-    mMeshManager.AddMesh(
-        std::make_shared<Mesh>(Mesh::CreateSphere(radius, rndColor)));
-    mPhysicsManager.AddSphere(radius);
+  if (ImGui::Button("Add Power Dist")) {
+    addModel(MODEL_PATH "Power_distributor/power_distributor.obj");
   }
   ImGui::SameLine();
-  if (ImGui::Button("Remove Mesh")) {
-    mPhysicsManager.RemoveBody(mMeshManager.GetSelectedId());
-    mMeshManager.Remove();
+  if (ImGui::Button("Add Sliding Scale")) {
+    addModel(MODEL_PATH "Sliding_scale/sliding_scale.obj");
+  }
+
+  if (ImGui::Button("Add Model")) {
+    handleOpenModel();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Remove Model")) {
+    removeModel();
   }
 
   if (ImGui::Button("Simulate")) {
@@ -190,10 +171,15 @@ void Viewport::Update(float ts) {
     ImGui::ProgressBar(float(mRenderManager.GetRenderId()) /
                        (mRenderManager.GetRenders()));
   }
+
+  ImGui::Text("ModelManager SelectedID: %i", mModelManager.GetSelectedId());
+  ImGui::Text("ModelManager Count: %i", mModelManager.GetCount());
+  ImGui::Text("PhysicsManager Count: %i", mPhysicsManager.GetBodyCount());
+
   ImGui::Text("Segmented Colors:");
-  for (int i = 0; i < mMeshManager.GetCount(); i++) {
+  for (int i = 0; i < mModelManager.GetCount(); i++) {
     ImGui::ColorEdit3(std::to_string(i).c_str(),
-                      &mMeshManager.GetSegmentedColors()[i].x);
+                      &mModelManager.GetSegmentedColors()[i].x);
   }
   ImGui::End();
 
@@ -227,28 +213,30 @@ void Viewport::renderSceneToFramebuffer() {
 
   mCamera->UpdateMatrix();
 
-  if (mViewMode == ViewMode::Flat || mViewMode == ViewMode::Shaded ||
-      mViewMode == ViewMode::Realistic) {
+  if (mViewMode != ViewMode::Segmented) {
     if (mCamera->GetBgImage() != "") {
       glDisable(GL_DEPTH_TEST);
       mBgQuad->Draw(*mBgQuadShader, true);
       glEnable(GL_DEPTH_TEST);
     }
   }
-  if (mViewMode == ViewMode::Realistic) {
-    mRayTraceQuad->Draw(*mRayTraceShader, false);
-  } else {
-    for (int i = 0; i < mMeshManager.GetCount(); i++) {
-      std::shared_ptr<Mesh> &mesh = mMeshManager.GetMeshes()[i];
+
+  for (int i = 0; i < mModelManager.GetCount(); i++) {
+    std::shared_ptr<Model> &model = mModelManager.GetModels()[i];
+    for (Mesh &mesh : model->GetMeshes()) {
       if (mViewMode == ViewMode::Flat) {
-        mesh->Draw(*mFlatShader, *mCamera, GL_LINE_STRIP);
+        mShadedShader->Activate();
+        mShadedShader->SetBool("IsShaded", false);
+        mesh.Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
       } else if (mViewMode == ViewMode::Shaded) {
-        mesh->Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
+        mShadedShader->Activate();
+        mShadedShader->SetBool("IsShaded", true);
+        mesh.Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
       } else if (mViewMode == ViewMode::Segmented) {
         mSegmentedShader->Activate();
-        glm::vec3 &uniqueColor = mMeshManager.GetSegmentedColors()[i];
+        glm::vec3 &uniqueColor = mModelManager.GetSegmentedColors()[i];
         mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
-        mesh->Draw(*mSegmentedShader, *mCamera, GL_TRIANGLES);
+        mesh.Draw(*mSegmentedShader, *mCamera, GL_TRIANGLES);
       }
     }
   }
@@ -265,12 +253,12 @@ void Viewport::handleOpenParams() {
 }
 
 void Viewport::addCamera(const std::string &path) {
-  std::string msg = "Added camera: " + path;
-  Logger::getInstance().Log(msg, LogLevel::SUCCESS);
+  Logger::getInstance().Success("Added camera: " + path);
   mCameraParameters->Load(path);
   glm::ivec2 resolution = mCameraParameters->ImageCalibratedSize;
   float aspectRatio = float(resolution.x) / resolution.y;
-  int height = 640;
+  // int height = 640; // YOLO dimension
+  int height = 1640;
   int width = static_cast<int>(height * aspectRatio);
   mCamera = std::make_shared<Camera>(width, height, glm::vec3(0));
   mCamera->SetParameters(*mCameraParameters);
@@ -286,11 +274,11 @@ void Viewport::removeCamera() {
   if (result) {
     std::string msg =
         "Removed camera: " + std::to_string(mCameraManager.GetSelectedId());
-    Logger::getInstance().Log(msg, LogLevel::SUCCESS);
+    Logger::getInstance().Success(msg);
   } else {
     std::string msg = "Failed to remove camera: " +
                       std::to_string(mCameraManager.GetSelectedId());
-    Logger::getInstance().Log(msg, LogLevel::ERROR);
+    Logger::getInstance().Error(msg);
   }
   switchCamFBO();
 }
@@ -305,8 +293,28 @@ void Viewport::switchCamFBO() {
     mBgTexture = mTextureManager.getTexture(mCamera->GetBgImage());
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
     mFrameBuffer = mCameraManager.GetFBO();
-    std::string msg =
-        "Switch to camera " + std::to_string(mCameraManager.GetSelectedId());
-    Logger::getInstance().Log(msg, LogLevel::DEBUG);
+    Logger::getInstance().Debug("Switch to camera " +
+                                std::to_string(mCameraManager.GetSelectedId()));
   }
+}
+
+void Viewport::handleOpenModel() {
+  const std::vector<std::string> &modelFilePaths =
+      FileSystem::OpenFiles(mFolderPath, "Model .obj", "*.obj");
+  for (const std::string &modelFilePath : modelFilePaths) {
+    if (modelFilePath != "") {
+      addModel(modelFilePath);
+    }
+  }
+}
+
+void Viewport::addModel(const std::string &modelPath) {
+  std::shared_ptr<Model> model = std::make_shared<Model>(modelPath);
+  mModelManager.AddModel(model);
+  mPhysicsManager.AddModel(model);
+}
+
+void Viewport::removeModel() {
+  mPhysicsManager.RemoveBody(mModelManager.GetSelectedId());
+  mModelManager.Remove();
 }

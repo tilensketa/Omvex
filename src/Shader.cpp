@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "Logger.h"
+
 Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   std::string vertexShaderCode = readShaderFile(vertexShaderPath);
   const char *vertexShaderSource = vertexShaderCode.c_str();
@@ -23,7 +25,9 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
   if (!success) {
     glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    std::cout << "Vertex Shader Compilation Failed:\n" << infoLog << std::endl;
+    std::ostringstream errorMsg;
+    errorMsg << "Vertex Shader Compilation Failed:\n" << infoLog;
+    Logger::getInstance().Error(errorMsg.str());
   }
 
   // Compile Fragment Shader
@@ -35,8 +39,9 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
   if (!success) {
     glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-    std::cout << "Fragment Shader Compilation Failed:\n"
-              << infoLog << std::endl;
+    std::ostringstream errorMsg;
+    errorMsg << "Fragment Shader Compilation Failed:\n" << infoLog;
+    Logger::getInstance().Error(errorMsg.str());
   }
 
   // Link Shaders into Shader Program
@@ -49,8 +54,14 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glGetProgramiv(mID, GL_LINK_STATUS, &success);
   if (!success) {
     glGetProgramInfoLog(mID, 512, NULL, infoLog);
-    std::cout << "Shader Program Linking Failed:\n" << infoLog << std::endl;
+    std::ostringstream errorMsg;
+    errorMsg << "Shader Program Linking Failed:\n" << infoLog;
+    Logger::getInstance().Error(errorMsg.str());
   }
+
+  Logger::getInstance().Success(
+      "Shader compiled: " + std::string(vertexShaderPath) + ", " +
+      std::string(fragmentShaderPath));
 
   // Delete the shaders as they're linked into our program now and no longer
   // needed
@@ -59,10 +70,10 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
 }
 
 std::string Shader::readShaderFile(const char *filePath) {
-  std::cout << "Reading file: " << filePath << std::endl;
   std::ifstream file(filePath);
   if (!file.is_open()) {
-    std::cerr << "Failed to open file: " << filePath << std::endl;
+    Logger::getInstance().Error("Failed to open file: " +
+                                std::string(filePath));
     return "";
   }
 

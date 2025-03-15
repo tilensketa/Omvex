@@ -8,8 +8,6 @@ void RenderManager::saveImage(std::shared_ptr<FBO> frameBuffer,
   if (frameBuffer == nullptr)
     return;
   frameBuffer->colorTexture->Save(path);
-  std::string msg = "Saving image: " + path;
-  Logger::getInstance().Log(msg, LogLevel::INFO);
 }
 
 void RenderManager::Update(std::shared_ptr<FBO> frameBuffer, bool canRender) {
@@ -40,7 +38,7 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
     mRenderSubId = 0;
     return;
   }
-  if (mRenderId >= (mRenders)) {
+  if (mRenderId >= mRenders) {
     mRendering = false;
     mRenderSetup = false;
     mRenderId = 0;
@@ -64,5 +62,5 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
   std::string msg = "Render time: " + std::to_string(elapsed.count());
-  Logger::getInstance().Log(msg, LogLevel::DEBUG);
+  Logger::getInstance().Debug(msg);
 }

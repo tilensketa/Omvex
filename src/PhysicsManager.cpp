@@ -22,11 +22,13 @@ PhysicsManager::PhysicsManager() {
   addGroundPlane();
 }
 
-void PhysicsManager::AddCube(const glm::vec3 &halfSize) {
-  reactphysics3d::Vector3 position(0, 0, 0);
-  reactphysics3d::Quaternion orientation =
-      reactphysics3d::Quaternion::identity();
-  reactphysics3d::Transform transform(position, orientation);
+void PhysicsManager::AddModel(std::shared_ptr<Model> &model) {
+  glm::vec3 half = (model->GetMaxVert() - model->GetMinVert()) / 2.0f;
+  AddCuboid(half);
+}
+
+void PhysicsManager::AddCuboid(const glm::vec3 &halfSize) {
+  reactphysics3d::Transform transform = defaultTransform();
   reactphysics3d::RigidBody *body = mPhysicsWorld->createRigidBody(transform);
   body->setType(reactphysics3d::BodyType::DYNAMIC);
   mBodies.push_back(body);
@@ -37,30 +39,14 @@ void PhysicsManager::AddCube(const glm::vec3 &halfSize) {
   collider = body->addCollider(boxShape, reactphysics3d::Transform::identity());
 }
 
-void PhysicsManager::AddSphere(float radius) {
-  reactphysics3d::Vector3 position(0, 0, 0);
-  reactphysics3d::Quaternion orientation =
-      reactphysics3d::Quaternion::identity();
-  reactphysics3d::Transform transform(position, orientation);
-  reactphysics3d::RigidBody *body = mPhysicsWorld->createRigidBody(transform);
-  body->setType(reactphysics3d::BodyType::DYNAMIC);
-  mBodies.push_back(body);
-  reactphysics3d::SphereShape *sphereShape =
-      mPhysicsCommon->createSphereShape(radius);
-  reactphysics3d::Collider *collider;
-  collider =
-      body->addCollider(sphereShape, reactphysics3d::Transform::identity());
-}
-
 void PhysicsManager::RemoveBody(int id) {
-  mBodies.erase(mBodies.begin() + (id + 1));
+  if (id != -1) {
+    mBodies.erase(mBodies.begin() + (id + 1));
+  }
 }
 
 void PhysicsManager::addGroundPlane() {
-  reactphysics3d::Vector3 position(0, 0, 0);
-  reactphysics3d::Quaternion orientation =
-      reactphysics3d::Quaternion::identity();
-  reactphysics3d::Transform transform(position, orientation);
+  reactphysics3d::Transform transform = defaultTransform();
   reactphysics3d::RigidBody *body = mPhysicsWorld->createRigidBody(transform);
   body->setType(reactphysics3d::BodyType::STATIC);
   mBodies.push_back(body);
@@ -92,30 +78,45 @@ void PhysicsManager::randomizeTransforms() {
   }
 }
 
-void PhysicsManager::Update(std::vector<std::shared_ptr<Mesh>> &meshes) {
-  if (mSimulating) {
-    if (mSimulationFrame == 0) {
-      randomizeTransforms();
-      Logger::getInstance().Log("Resimulate", LogLevel::INFO);
+void PhysicsManager::Update(std::vector<std::shared_ptr<Model>> &models) {
+  if (!mSimulating)
+    return;
+
+  // Initialize random transforms
+  if (mSimulationFrame == 0) {
+    randomizeTransforms();
+    Logger::getInstance().Info("Resimulate");
+  }
+  // Do physics
+  float fixedTimeStep = 1.0f / 60.0f;
+  mPhysicsWorld->update(fixedTimeStep);
+  bool sleep = true;
+  // i = 1 -> beacuse ground plane is 0
+  // Models dont include ground, bodies do
+  for (int i = 1; i < mBodies.size(); i++) {
+    const reactphysics3d::Transform &transform = mBodies[i]->getTransform();
+    const reactphysics3d::Vector3 &position = transform.getPosition();
+    const reactphysics3d::Matrix3x3 &rot =
+        transform.getOrientation().getMatrix();
+    glm::mat4 mat = Utils::ReactMat3Vec3ToGlmMat4(rot, position);
+    for (Mesh &mesh : models[i - 1]->GetMeshes()) {
+      mesh.SetTransform(mat);
     }
-    // Do physics
-    float fixedTimeStep = 1.0f / 60.0f;
-    mPhysicsWorld->update(fixedTimeStep);
-    bool sleep = true;
-    for (int i = 1; i < mBodies.size(); i++) {
-      const reactphysics3d::Transform &transform = mBodies[i]->getTransform();
-      const reactphysics3d::Vector3 &position = transform.getPosition();
-      const reactphysics3d::Matrix3x3 &rot =
-          transform.getOrientation().getMatrix();
-      glm::mat4 mat = Utils::ReactMat3Vec3ToGlmMat4(rot, position);
-      meshes[i - 1]->SetTransform(mat);
-      if (!mBodies[i]->isSleeping()) {
-        sleep = false;
-      }
-    }
-    mSimulationFrame++;
-    if (sleep || (mSimulationFrame >= mSimulatingFrames)) {
-      mSimulating = false;
+    if (!mBodies[i]->isSleeping()) {
+      sleep = false;
     }
   }
+  mSimulationFrame++;
+  // Stop simulating if all bodies are sleeping or max simulation frames reached
+  if (sleep || (mSimulationFrame >= mSimulatingFrames)) {
+    mSimulating = false;
+  }
+}
+
+reactphysics3d::Transform PhysicsManager::defaultTransform() {
+  reactphysics3d::Vector3 position(0, 0, 0);
+  reactphysics3d::Quaternion orientation =
+      reactphysics3d::Quaternion::identity();
+  reactphysics3d::Transform transform(position, orientation);
+  return transform;
 }

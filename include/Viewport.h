@@ -21,7 +21,8 @@
 #include "TextureManager.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
-#include "MeshManager.h"
+#include "ModelManager.h"
+#include "Model.h"
 
 class Viewport {
 public:
@@ -33,6 +34,10 @@ public:
 private:
   void renderSceneToFramebuffer();
   void handleOpenParams();
+  void handleOpenModel();
+
+  void addModel(const std::string& modelPath);
+  void removeModel();
 
   void addCamera(const std::string &path);
   void removeCamera();
@@ -42,18 +47,16 @@ private:
   GLFWwindow *mWindow;
 
   std::unique_ptr<Shader> mShadedShader;
-  std::unique_ptr<Shader> mFlatShader;
   std::unique_ptr<Shader> mSegmentedShader;
   std::unique_ptr<Shader> mBgQuadShader;
-  std::unique_ptr<Shader> mRayTraceShader;
 
-  MeshManager mMeshManager;
+  ModelManager mModelManager;
 
   CameraManager mCameraManager;
   std::shared_ptr<Camera> mCamera;
   std::shared_ptr<FBO> mFrameBuffer;
 
-  std::string mFolderPath = "/home/tilen/dev/Omvex/test1/1.jpg";
+  std::string mFolderPath = "/home/tilen/dev/Omvex/README.md";
 
   CameraParametersManager mCameraParametersManager;
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
@@ -61,7 +64,6 @@ private:
   TextureManager mTextureManager;
   std::shared_ptr<Texture> mBgTexture;
   std::unique_ptr<Quad> mBgQuad;
-  std::unique_ptr<Quad> mRayTraceQuad;
 
   ViewMode mViewMode = ViewMode::Shaded;
 

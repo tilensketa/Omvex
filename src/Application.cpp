@@ -142,9 +142,9 @@ void Application::Run() {
 std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)>
 Application::initWindow(unsigned int width, unsigned int height) {
   if (!glfwInit()) {
-    Logger::getInstance().Log("Failed to initialize GLFW", LogLevel::FATAL);
+    Logger::getInstance().Fatal("Failed to initialize GLFW");
   }
-  Logger::getInstance().Log("Successfully initialized GLFW", LogLevel::SUCCESS);
+  Logger::getInstance().Success("Successfully initialized GLFW");
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -152,10 +152,9 @@ Application::initWindow(unsigned int width, unsigned int height) {
 
   GLFWwindow *window = glfwCreateWindow(width, height, "Omvex", NULL, NULL);
   if (window == NULL) {
-    Logger::getInstance().Log("Failed to create GLFW window", LogLevel::FATAL);
+    Logger::getInstance().Fatal("Failed to create GLFW window");
   }
-  Logger::getInstance().Log("Successfully created GLFW window",
-                            LogLevel::SUCCESS);
+  Logger::getInstance().Success("Successfully created GLFW window");
   glfwMakeContextCurrent(window);
 
   // Disable V-Sync
@@ -166,9 +165,9 @@ Application::initWindow(unsigned int width, unsigned int height) {
   // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    Logger::getInstance().Log("Failed to initialize GLAD", LogLevel::FATAL);
+    Logger::getInstance().Fatal("Failed to initialize GLAD");
   }
-  Logger::getInstance().Log("Successfully initialized GLAD", LogLevel::SUCCESS);
+  Logger::getInstance().Success("Successfully initialized GLAD");
   glViewport(0, 0, width, height);
   return std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)>(
       window, glfwDestroyWindow);
@@ -194,6 +193,6 @@ void Application::framebuffer_size_callback(GLFWwindow *window, int width,
     // app->mWindowSize = glm::ivec2(width, height);
     std::string info = "Screen size changed: " + std::to_string(width) + ", " +
                        std::to_string(height);
-    Logger::getInstance().Log(info, LogLevel::INFO);
+    Logger::getInstance().Info(info);
   }
 }

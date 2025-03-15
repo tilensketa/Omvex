@@ -60,7 +60,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(reactphysics3d)
 
-#[[ # Use FetchContent to download and include Assimp
+# Use FetchContent to download and include Assimp
 FetchContent_Declare(
   assimp
   GIT_REPOSITORY https://github.com/assimp/assimp.git
@@ -71,7 +71,7 @@ FetchContent_GetProperties(assimp)
 if(NOT assimp_POPULATED)
   FetchContent_Populate(assimp)
   add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR})
-endif() ]]
+endif()
 
 
 function(download_files base_url target_dir file_list)
@@ -172,7 +172,8 @@ set(SOURCES
     src/CameraManager.cpp
     src/PhysicsManager.cpp
     src/RenderManager.cpp
-    src/MeshManager.cpp
+    src/ModelManager.cpp
+    src/Model.cpp
     # Add other source files here if any
 )
 
@@ -187,7 +188,7 @@ target_include_directories(Omvex PRIVATE
     ${glad_SOURCE_DIR}/include
     ${opencv_SOURCE_DIR}/include
     ${reactphysics3d_SOURCE_DIR}/include
-    # ${assimp_SOURCE_DIR}/include
+    ${assimp_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/stb
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/pfd
@@ -200,7 +201,7 @@ target_link_libraries(Omvex PRIVATE
     glfw
     ${glm_LIBRARY}
     glad
-    # assimp::assimp
+    assimp::assimp
     ${OpenCV_LIBS}
     nlohmann_json::nlohmann_json
     reactphysics3d

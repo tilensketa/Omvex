@@ -13,7 +13,7 @@
 #include <chrono>
 #include <memory>
 
-enum Mode { CameraCalibration, Viewport3d};
+enum Mode { CameraCalibration, Viewport3d };
 
 class Application {
 public:
@@ -39,7 +39,7 @@ private:
 private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> mWindow;
 
-  Mode mMode = Mode::Viewport3d;
+  Mode mMode = Mode::CameraCalibration;
   CameraCalibrator mCameraCalibrator;
   Viewport mViewport;
 

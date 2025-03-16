@@ -8,12 +8,12 @@ Viewport::Viewport() {
   mBgQuad = std::make_unique<Quad>();
 
   // Load all backgrounds
-  std::string testFolder =
+  /* std::string testFolder =
       FileSystem::FindExistingFolder({"../test1/", "../../test1/"});
   for (size_t i = 1; i < 8; i++) {
     std::string path = testFolder + std::to_string(i) + ".json";
     addCamera(path);
-  }
+  } */
 
   mSegmentedShader = std::make_unique<Shader>(
       mShaderFolderPath, "segmentedVert.glsl", "segmentedFrag.glsl");

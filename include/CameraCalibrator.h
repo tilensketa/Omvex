@@ -26,6 +26,7 @@ private:
 
   void handleOpenImage();
   void handleOpenParams();
+  void saveParams();
 
 private:
   char mRCImageDrag[4];

@@ -10,7 +10,7 @@
 #include <cassert>
 #include <memory>
 
-Application::Application() : mWindow(initWindow(100, 100)) {
+Application::Application() : mWindow(initWindow(1000, 1000)) {
   mTimeStep = 0.0f;
   initCallbacks();
   setupImGui();
@@ -32,9 +32,9 @@ void Application::setupImGui() {
   ImGuiIO &io = ImGui::GetIO();
   // (void)io;
   std::vector<std::string> possibleConfigsPaths = {"../configs/",
-    "../../configs/"};
+                                                   "../../configs/"};
   mConfigsFolder = FileSystem::FindExistingFolder(possibleConfigsPaths);
-  if(mConfigsFolder == ""){
+  if (mConfigsFolder == "") {
     Logger::getInstance().Fatal("Config folder not found!");
   }
   mImGuiIniFilePath = mConfigsFolder + "imgui.ini";
@@ -42,7 +42,6 @@ void Application::setupImGui() {
   Logger::getInstance().Debug("imgui.ini file path: " + mImGuiIniFilePath);
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();

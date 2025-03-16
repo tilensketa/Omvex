@@ -12,13 +12,6 @@ public:
   Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices,
        std::vector<std::string> &textures, std::string name = "");
 
-  static Mesh CreatePlane(float size, const glm::vec3 &color);
-  static Mesh CreateCube(float size, const glm::vec3 &color);
-  static Mesh CreateSphere(float radius, const glm::vec3 &color);
-  static Mesh CreateCamera();
-  static Mesh CreateFrustum(const Camera &cam, float nearPlane, float farPlane,
-                            const glm::vec3 &color);
-
   void Draw(Shader &shader, Camera &camera, GLuint mode) const;
 
   void SetTransform(const glm::mat4 &mat);

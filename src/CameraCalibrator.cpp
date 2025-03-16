@@ -101,14 +101,7 @@ void CameraCalibrator::Update() {
         handleOpenParams();
       }
       if (ImGui::MenuItem("Save Params")) {
-        std::string fileName =
-            FileSystem::GetFileNameFromPath(mLoadedImageFilename);
-        std::string saveFolder =
-            FileSystem::GetDirectoryFromPath(mLoadedImageFilename);
-        std::string saveName =
-            FileSystem::RemoveFileExtension(fileName) + ".json";
-        std::string savePath = saveFolder + "/" + saveName;
-        mCameraParameters->Save(savePath);
+        saveParams();
       }
       ImGui::EndMenu();
     }
@@ -144,6 +137,17 @@ void CameraCalibrator::Update() {
   ImGui::Begin("Settings");
   ImGui::Text("CAMERA CALIBRATION");
   ImGui::Separator();
+  if (ImGui::Button("Open Image")) {
+    handleOpenImage();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Open Params")) {
+    handleOpenParams();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Save Params")) {
+    saveParams();
+  }
 
   bool changeDim = ImGui::Checkbox("Dim image", &mCameraParameters->DimImage);
   ImGui::SameLine();
@@ -449,4 +453,13 @@ void CameraCalibrator::handleOpenParams() {
     mChanged = true;
     mFolderPath = paramFilePath;
   }
+}
+
+void CameraCalibrator::saveParams() {
+  std::string fileName = FileSystem::GetFileNameFromPath(mLoadedImageFilename);
+  std::string saveFolder =
+      FileSystem::GetDirectoryFromPath(mLoadedImageFilename);
+  std::string saveName = FileSystem::RemoveFileExtension(fileName) + ".json";
+  std::string savePath = saveFolder + "/" + saveName;
+  mCameraParameters->Save(savePath);
 }

@@ -32,11 +32,13 @@ def run_cmake(build_type, opencv_path, compile_commands):
     configure_cmd = ["cmake", "..", f'-DOpenCV_DIR={opencv_path}', f"-DCMAKE_BUILD_TYPE={build_type}"]
     if compile_commands:
         configure_cmd.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+    configure_cmd.append("-Wno-dev")
     
     build_cmd = ["cmake", "--build", ".", "--config", build_type]
     
     print("CONFIGURE: ", " ".join(configure_cmd))
     print("BUILD: ", " ".join(build_cmd))
+    print("\n")
 
     # Run CMake configure command and output in real-time
     configure_result = subprocess.run(configure_cmd)

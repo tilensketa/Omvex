@@ -1,5 +1,7 @@
 # Omvex
 
+![omvex_logo](resources/OMVEX_logo.png)
+
 ## Overview
 Omvex is a C++ application designed to generate synthetic images using 3D models and custom backgrounds. It utilizes multiple libraries for graphics rendering, physics simulation, and file handling.
 
@@ -8,7 +10,6 @@ Omvex is a C++ application designed to generate synthetic images using 3D models
 - Supports OpenGL for high-performance rendering
 - Integrates physics-based simulations
 - Uses OpenCV to extract camera matrix
-- Utilizes ImGui for UI rendering
 
 ## Dependencies
 This project relies on the following libraries:
@@ -43,6 +44,7 @@ Ensure you have the following installed:
 - A C++ compiler with C++17 support
 - OpenGL drivers
 - OpenCV system wide
+- Python
 
 ### OpenCV Installation
 
@@ -58,10 +60,6 @@ Download Precompiled Binaries
 2. Extract the files (e.g., to C:\opencv).
 3. Set environment variables:
     - Add C:\opencv\build\x64\vc16\bin to your PATH.
-4. Configure CMake manually when building:
-```sh
-cmake .. -DOpenCV_DIR="C:/opencv/build"
-```
 
 
 ## Building the Project
@@ -75,12 +73,12 @@ cmake .. -DOpenCV_DIR="C:/opencv/build"
    python configure_build.py
    ```
 3. Run the application:
-    - Linux
+    - Linux (Ubuntu/Debian)
    ```sh
    cd build
    ./Omvex
    ```
-    - Window
+    - Windows
    ```sh
    cd build/Release
    Omvex.exe
@@ -94,10 +92,10 @@ cmake .. -DOpenCV_DIR="C:/opencv/build"
 ## Screenshots
 
 ### Application Preview
-![camera_calibration](screenshots/camera_calibration.png)
+![camera_calibration](resources/screenshots/camera_calibration.png)
 <p align="center">
-  <img src="screenshots/viewport_3d_shaded.png" width="49%">
-  <img src="screenshots/viewport_3d_segmented.png" width="49%">
+  <img src="resources/screenshots/viewport_3d_shaded.png" width="49%">
+  <img src="resources/screenshots/viewport_3d_segmented.png" width="49%">
 </p>
 
 ## Author

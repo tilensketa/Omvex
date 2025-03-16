@@ -46,4 +46,7 @@ private:
   float mTimeStep;
   std::chrono::time_point<std::chrono::high_resolution_clock> mFrameStart,
       mFrameEnd;
+
+  std::string mConfigsFolder;
+  std::string mImGuiIniFilePath;
 };

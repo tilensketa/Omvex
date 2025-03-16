@@ -81,7 +81,8 @@ void Camera::OnResize(const glm::vec2 &newResolution) {
   UpdateMatrix();
 }
 
-void Camera::SetParameters(const CameraParameters &params) {
+void Camera::SetParameters(const std::string &folderPath,
+                           const CameraParameters &params) {
   mParameters = std::make_unique<CameraParameters>(params);
   mStatic = true;
 
@@ -107,7 +108,7 @@ void Camera::SetParameters(const CameraParameters &params) {
       static_cast<float>(imageSize.x) / static_cast<float>(imageSize.y);
   mProjection = glm::perspective(fovY, aspectRatio, mNearPlane, mFarPlane);
 
-  mBgImage = params.RefImageFilePath;
+  mBgImage = folderPath + "/" + params.RefImageFilePath;
 
   mMatrix = mProjection * mView;
 }

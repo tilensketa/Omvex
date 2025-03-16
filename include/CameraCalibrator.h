@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include "CameraParametersManager.h"
+#include "CameraParameters.h"
 #include "TextureManager.h"
 
 class CameraCalibrator {
@@ -37,7 +37,7 @@ private:
   std::string mLoadedImageFilename = "";
   glm::vec2 mImageSize;
 
-  std::string mFolderPath = "/home/tilen/dev/Omvex/README.md";
+  std::string mFolderPath = "";
 
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
 };

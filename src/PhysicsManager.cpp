@@ -59,7 +59,7 @@ void PhysicsManager::addGroundPlane() {
 }
 void PhysicsManager::randomizeTransforms() {
   // Skip 0 -> ground plane
-  for (int i = 1; i < mBodies.size(); i++) {
+  for (size_t i = 1; i < mBodies.size(); i++) {
     reactphysics3d::Body *body = mBodies[i];
     glm::vec3 rndPos = Random::Vec3(-30.0f, 30.0f);
     float z = Random::Float(30, 50);
@@ -93,7 +93,7 @@ void PhysicsManager::Update(std::vector<std::shared_ptr<Model>> &models) {
   bool sleep = true;
   // i = 1 -> beacuse ground plane is 0
   // Models dont include ground, bodies do
-  for (int i = 1; i < mBodies.size(); i++) {
+  for (size_t i = 1; i < mBodies.size(); i++) {
     const reactphysics3d::Transform &transform = mBodies[i]->getTransform();
     const reactphysics3d::Vector3 &position = transform.getPosition();
     const reactphysics3d::Matrix3x3 &rot =

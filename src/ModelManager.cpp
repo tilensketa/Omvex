@@ -30,11 +30,11 @@ void ModelManager::Remove() {
 }
 
 void ModelManager::ShowModels() {
-  ImGui::Text("Meshes");
+  ImGui::Text("Models");
   if (ImGui::BeginListBox(
-          "##Meshes",
+          "##Models",
           ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing()))) {
-    for (int n = 0; n < mModels.size(); n++) {
+    for (size_t n = 0; n < mModels.size(); n++) {
       const bool is_selected = (mSelectedModelId == n);
       if (ImGui::Selectable(mModelNames[n].c_str(), is_selected) &&
           mSelectedModelId != n) {

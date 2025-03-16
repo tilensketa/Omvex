@@ -5,7 +5,7 @@ CameraParameters::CameraParameters(const std::string &filePath) {
   RefImageFilePath = filePath;
   std::vector<glm::vec2> positions = {
       {0.983, 0.391}, {0.438, 0.072}, {0.076, 0.348}, {0.707, 0.967}};
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     RCImagePos[i] = positions[i];
   }
   RCWorldSize = glm::vec2(9, 12);

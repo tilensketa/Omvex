@@ -29,7 +29,7 @@ void CameraManager::AddCamera(std::shared_ptr<Camera> camera) {
 
 bool CameraManager::HandleSwitching(GLFWwindow *window) {
   int oldSelectedCameraId = mSelectedCameraId;
-  for (int i = 0; i < mCameras.size(); ++i) {
+  for (size_t i = 0; i < mCameras.size(); ++i) {
     int key = GLFW_KEY_1 + i;
     if (glfwGetKey(window, key) == GLFW_PRESS) {
       mSelectedCameraId = i;
@@ -84,7 +84,7 @@ void CameraManager::ShowCameras() {
   if (ImGui::BeginListBox(
           "##Cameras",
           ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing()))) {
-    for (int n = 0; n < mCameras.size(); n++) {
+    for (size_t n = 0; n < mCameras.size(); n++) {
       const bool is_selected = (mSelectedCameraId == n);
       if (ImGui::Selectable(mCameraNames[n].c_str(), is_selected) &&
           mSelectedCameraId != n) {

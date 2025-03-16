@@ -41,7 +41,8 @@ public:
 
   void SetStatic(bool stati) { mStatic = stati; }
 
-  void SetParameters(const CameraParameters &params);
+  void SetParameters(const std::string &folderPath,
+                     const CameraParameters &params);
   const CameraParameters &GetParameters() const { return *mParameters; }
 
 private:

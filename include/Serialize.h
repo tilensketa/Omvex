@@ -59,7 +59,7 @@ inline void ToJson(nlohmann::json &j, const glm::mat3x3 &mat) {
 }
 
 inline void FromJson(const nlohmann::json &j, glm::mat3x3 &mat) {
-  for (int i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 3; ++i) {
     mat[i][0] = j.at(i).at(0).get<float>();
     mat[i][1] = j.at(i).at(1).get<float>();
     mat[i][2] = j.at(i).at(2).get<float>();
@@ -69,7 +69,7 @@ inline void FromJson(const nlohmann::json &j, glm::mat3x3 &mat) {
 // Serialize an array of glm::vec2 (C-style array with size 4)
 inline void ToJson(nlohmann::json &j, const glm::vec2 vec[4]) {
   j = json::array();
-  for (int i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     json vecJson;
     ToJson(vecJson, vec[i]);
     j.push_back(vecJson);
@@ -78,7 +78,7 @@ inline void ToJson(nlohmann::json &j, const glm::vec2 vec[4]) {
 
 // Deserialize an array of glm::vec3 (C-style array with size 4)
 inline void FromJson(const nlohmann::json &j, glm::vec3 vec[4]) {
-  for (int i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     FromJson(j.at(i), vec[i]);
   }
 }
@@ -86,7 +86,7 @@ inline void FromJson(const nlohmann::json &j, glm::vec3 vec[4]) {
 // Serialize an array of glm::vec3 (C-style array with size 4)
 inline void ToJson(nlohmann::json &j, const glm::vec3 vec[4]) {
   j = json::array();
-  for (int i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     json vecJson;
     ToJson(vecJson, vec[i]);
     j.push_back(vecJson);
@@ -95,7 +95,7 @@ inline void ToJson(nlohmann::json &j, const glm::vec3 vec[4]) {
 
 // Deserialize an array of glm::vec2 (C-style array with size 4)
 inline void FromJson(const nlohmann::json &j, glm::vec2 vec[4]) {
-  for (int i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     FromJson(j.at(i), vec[i]);
   }
 }

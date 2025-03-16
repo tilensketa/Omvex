@@ -1,30 +1,26 @@
 #include "Viewport.h"
-#include "Random.h"
-
-#include "Colors.h"
 #include "Utils.h"
 
-#define SHADER_PATH "../shaders/"
-#define MODEL_PATH "../models/"
-
 Viewport::Viewport() {
+  getRelativePaths();
   mCameraParameters = std::make_unique<CameraParameters>("");
 
   mBgQuad = std::make_unique<Quad>();
 
   // Load all backgrounds
-  for (int i = 1; i < 7; i++) {
-    std::string path =
-        "/home/tilen/dev/Omvex/test1/" + std::to_string(i) + ".json";
+  std::string testFolder =
+      FileSystem::FindExistingFolder({"../test1/", "../../test1/"});
+  for (size_t i = 1; i < 8; i++) {
+    std::string path = testFolder + std::to_string(i) + ".json";
     addCamera(path);
   }
 
-  mSegmentedShader = std::make_unique<Shader>(SHADER_PATH "segmentedVert.glsl",
-                                              SHADER_PATH "segmentedFrag.glsl");
-  mShadedShader = std::make_unique<Shader>(SHADER_PATH "shadedVert.glsl",
-                                           SHADER_PATH "shadedFrag.glsl");
-  mBgQuadShader = std::make_unique<Shader>(SHADER_PATH "quadVert.glsl",
-                                           SHADER_PATH "quadFrag.glsl");
+  mSegmentedShader = std::make_unique<Shader>(
+      mShaderFolderPath, "segmentedVert.glsl", "segmentedFrag.glsl");
+  mShadedShader = std::make_unique<Shader>(mShaderFolderPath, "shadedVert.glsl",
+                                           "shadedFrag.glsl");
+  mBgQuadShader = std::make_unique<Shader>(mShaderFolderPath, "quadVert.glsl",
+                                           "quadFrag.glsl");
 
   if (mBgTexture)
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
@@ -134,15 +130,15 @@ void Viewport::Update(float ts) {
 
   mModelManager.ShowModels();
   if (ImGui::Button("Add Multimeter")) {
-    addModel(MODEL_PATH "Multimeter/multimeter.obj");
+    addModel(mModelFolderPath + "Multimeter/multimeter.obj");
   }
   ImGui::SameLine();
   if (ImGui::Button("Add Power Dist")) {
-    addModel(MODEL_PATH "Power_distributor/power_distributor.obj");
+    addModel(mModelFolderPath + "Power_distributor/power_distributor.obj");
   }
   ImGui::SameLine();
   if (ImGui::Button("Add Sliding Scale")) {
-    addModel(MODEL_PATH "Sliding_scale/sliding_scale.obj");
+    addModel(mModelFolderPath + "Sliding_scale/sliding_scale.obj");
   }
 
   if (ImGui::Button("Add Model")) {
@@ -177,27 +173,12 @@ void Viewport::Update(float ts) {
   ImGui::Text("PhysicsManager Count: %i", mPhysicsManager.GetBodyCount());
 
   ImGui::Text("Segmented Colors:");
-  for (int i = 0; i < mModelManager.GetCount(); i++) {
+  for (size_t i = 0; i < mModelManager.GetCount(); i++) {
     ImGui::ColorEdit3(std::to_string(i).c_str(),
                       &mModelManager.GetSegmentedColors()[i].x);
   }
   ImGui::End();
-
-  ImGui::Begin("Logger");
-  std::vector<std::pair<LogLevel, std::string>> logs =
-      Logger::getInstance().GetLogs();
-  ImGui::PushTextWrapPos(ImGui::GetWindowWidth());
-  for (const auto &log : logs) {
-    ImU32 color = Colors::LogLevelToColor(static_cast<LogLevel>(log.first));
-    ImGui::PushStyleColor(ImGuiCol_Text, color);
-    ImGui::Text("%s", log.second.c_str());
-    ImGui::PopStyleColor();
-  }
-  if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
-    ImGui::SetScrollHereY(1.0f);
-  }
-  ImGui::PopTextWrapPos();
-  ImGui::End();
+  Logger::getInstance().ShowLogs();
 }
 
 void Viewport::renderSceneToFramebuffer() {
@@ -221,7 +202,7 @@ void Viewport::renderSceneToFramebuffer() {
     }
   }
 
-  for (int i = 0; i < mModelManager.GetCount(); i++) {
+  for (size_t i = 0; i < mModelManager.GetCount(); i++) {
     std::shared_ptr<Model> &model = mModelManager.GetModels()[i];
     for (Mesh &mesh : model->GetMeshes()) {
       if (mViewMode == ViewMode::Flat) {
@@ -255,15 +236,18 @@ void Viewport::handleOpenParams() {
 void Viewport::addCamera(const std::string &path) {
   Logger::getInstance().Success("Added camera: " + path);
   mCameraParameters->Load(path);
+  std::string folderPath = FileSystem::GetDirectoryFromPath(path);
   glm::ivec2 resolution = mCameraParameters->ImageCalibratedSize;
   float aspectRatio = float(resolution.x) / resolution.y;
   // int height = 640; // YOLO dimension
   int height = 1640;
   int width = static_cast<int>(height * aspectRatio);
   mCamera = std::make_shared<Camera>(width, height, glm::vec3(0));
-  mCamera->SetParameters(*mCameraParameters);
+  mCamera->SetParameters(folderPath, *mCameraParameters);
   mCameraManager.AddCamera(mCamera);
-  mBgTexture = mTextureManager.getTexture(mCameraParameters->RefImageFilePath);
+  std::string texturePath =
+      folderPath + "/" + mCameraParameters->RefImageFilePath;
+  mBgTexture = mTextureManager.getTexture(texturePath);
   mBgQuad->SetTexture(mBgTexture->GetTextureID());
   mFrameBuffer = std::make_shared<FBO>(width, height);
   mCameraManager.AddFBO(mFrameBuffer);
@@ -317,4 +301,17 @@ void Viewport::addModel(const std::string &modelPath) {
 void Viewport::removeModel() {
   mPhysicsManager.RemoveBody(mModelManager.GetSelectedId());
   mModelManager.Remove();
+}
+
+// Get relative paths for shaders and models folders
+void Viewport::getRelativePaths() {
+  std::vector<std::string> possibleShaderPaths = {"../shaders/",
+                                                  "../../shaders/"};
+  std::vector<std::string> possibleModelPaths = {"../models/", "../../models/"};
+  mShaderFolderPath = FileSystem::FindExistingFolder(possibleShaderPaths);
+  mModelFolderPath = FileSystem::FindExistingFolder(possibleModelPaths);
+  if (mShaderFolderPath == "")
+    Logger::getInstance().Fatal("Shader folder not found!");
+  if (mModelFolderPath == "")
+    Logger::getInstance().Fatal("Models folder not found!");
 }

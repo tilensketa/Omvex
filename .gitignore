@@ -3,3 +3,4 @@ renders/
 build/
 dependencies/
 .cache/
+run.sh

@@ -209,3 +209,7 @@ target_link_libraries(Omvex PRIVATE
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_definitions(-DNOMINMAX)

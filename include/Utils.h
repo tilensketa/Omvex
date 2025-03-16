@@ -26,7 +26,7 @@ inline std::string GlmVec4ToString(const glm::vec4 &vec) {
 inline std::string GlmMat3ToString(const glm::mat3 &mat) {
   std::ostringstream oss;
   // oss << "[\n";
-  for (int i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 3; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << "]\n";
   }
   // oss << "]";
@@ -37,7 +37,7 @@ inline std::string GlmMat3ToString(const glm::mat3 &mat) {
 inline std::string GlmMat3x4ToString(const glm::mat3x4 &mat) {
   std::ostringstream oss;
   // oss << "[\n";
-  for (int i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 3; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
         << mat[3][i] << "]\n";
   }
@@ -49,7 +49,7 @@ inline std::string GlmMat3x4ToString(const glm::mat3x4 &mat) {
 inline std::string GlmMat4ToString(const glm::mat4 &mat) {
   std::ostringstream oss;
   oss << "[\n";
-  for (int i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
         << mat[3][i] << "]\n";
   }
@@ -82,8 +82,8 @@ inline cv::Mat GlmMat3x3ToCvMat(const glm::mat3x3 &mat) {
   cv::Mat cvMat(3, 3, CV_32F);
 
   // Manually copy the elements of glm::mat3x3 into cv::Mat
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
       cvMat.at<float>(j, i) = mat[i][j]; // WARN glm column major, cv row major
     }
   }
@@ -100,8 +100,8 @@ inline cv::Mat glmToCvMat(const glm::vec3 &vec) {
 // Convert cv::Mat to glm::mat3x3
 inline glm::mat3x3 cvToGlmMat3x3(const cv::Mat &mat) {
   glm::mat3x3 glmMat;
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
       if (mat.type() == CV_32F) {
         glmMat[j][i] = mat.at<float>(i, j); // GLM is column-major
       } else if (mat.type() == CV_64F) {
@@ -140,8 +140,8 @@ inline glm::vec4 CvMatToGlmVec4(const cv::Mat &mat) {
 
 inline glm::mat3x3 CvMatToGlmMat3x3(const cv::Mat &mat) {
   glm::mat3x3 glmMat;
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
       if (mat.type() == CV_32F) {
         glmMat[j][i] = mat.at<float>(i, j); // GLM is column-major
       } else if (mat.type() == CV_64F) {
@@ -189,8 +189,8 @@ inline glm::mat4
 ReactMat3Vec3ToGlmMat4(const reactphysics3d::Matrix3x3 &orientation,
                        const reactphysics3d::Vector3 &position) {
   glm::mat4 mat = glm::mat4(1.0f);
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
       mat[i][j] = orientation[j][i];
     }
   }

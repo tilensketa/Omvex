@@ -6,6 +6,8 @@
 class Shader {
 public:
   Shader(const char *vertexShaderPath, const char *fragmentShaderPath);
+  Shader(const std::string &folder, const std::string &vertex,
+         const std::string &fragment);
 
   void Activate();
   void Delete();

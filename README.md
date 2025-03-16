@@ -70,21 +70,20 @@ cmake .. -DOpenCV_DIR="C:/opencv/build"
    git clone https://github.com/tilensketa/Omvex.git
    cd Omvex
    ```
-2. Create a build directory:
+2. Run `configure_build.py` to build and follow steps:
    ```sh
-   mkdir build && cd build
+   python configure_build.py
    ```
-3. Run CMake:
+3. Run the application:
+    - Linux
    ```sh
-   cmake ..
-   ```
-4. Compile the project:
-   ```sh
-   make -j$(nproc)
-   ```
-5. Run the application:
-   ```sh
+   cd build
    ./Omvex
+   ```
+    - Window
+   ```sh
+   cd build/Release
+   Omvex.exe
    ```
 
 ## Usage

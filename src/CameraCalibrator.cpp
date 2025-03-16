@@ -11,7 +11,7 @@
 void CameraCalibrator::calculateRotationTranslation() {
   std::vector<cv::Point3f> objectPoints(4);
   std::vector<cv::Point2f> imagePoints(4);
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     const glm::vec3 &obj = mCameraParameters->RCWorldPos[i];
     const glm::vec2 &img = mCameraParameters->RCImagePos[i];
     glm::vec2 scaled_img = img * mImageSize;
@@ -24,7 +24,7 @@ void CameraCalibrator::calculateRotationTranslation() {
   float cx = mImageSize.x / 2.0f;
   float cy = mImageSize.y / 2.0f;
   cv::Mat distortion = cv::Mat::zeros(4, 1, CV_32F);
-  for (int i = 0; i < 100; i++) {
+  for (size_t i = 0; i < 100; i++) {
     fx += step;
     float fy = fx;
     cv::Mat intrinsic =
@@ -34,7 +34,7 @@ void CameraCalibrator::calculateRotationTranslation() {
     cv::solvePnP(objectPoints, imagePoints, intrinsic, distortion, rvec, tvec);
 
     float error = 0;
-    for (int j = 0; j < 4; j++) {
+    for (size_t j = 0; j < 4; j++) {
       glm::vec2 imgPoint = projectPoint3DTo2D(mCameraParameters->RCWorldPos[j]);
       error += mCameraParameters->RCImagePos[j].x * mImageSize.x - imgPoint.x;
       error += mCameraParameters->RCImagePos[j].y * mImageSize.y - imgPoint.y;
@@ -101,11 +101,14 @@ void CameraCalibrator::Update() {
         handleOpenParams();
       }
       if (ImGui::MenuItem("Save Params")) {
-        std::string file = FileSystem::SaveFile(mFolderPath, ".json");
-        if (file != "") {
-          mCameraParameters->Save(file);
-          mFolderPath = file;
-        }
+        std::string fileName =
+            FileSystem::GetFileNameFromPath(mLoadedImageFilename);
+        std::string saveFolder =
+            FileSystem::GetDirectoryFromPath(mLoadedImageFilename);
+        std::string saveName =
+            FileSystem::RemoveFileExtension(fileName) + ".json";
+        std::string savePath = saveFolder + "/" + saveName;
+        mCameraParameters->Save(savePath);
       }
       ImGui::EndMenu();
     }
@@ -150,14 +153,14 @@ void CameraCalibrator::Update() {
   // Rectangle Dimension
   ImGui::Text("Dimension:");
   ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(Colors::RED));
+  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::RED));
   bool changeRCSize0 =
       ImGui::InputFloat("Xd", &mCameraParameters->RCWorldSize[0]);
   ImGui::PopStyleColor();
   ImGui::PopItemWidth();
   ImGui::SameLine();
   ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(Colors::GREEN));
+  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::GREEN));
   bool changeRCSize1 =
       ImGui::InputFloat("Yd", &mCameraParameters->RCWorldSize[1]);
   ImGui::PopStyleColor();
@@ -166,14 +169,14 @@ void CameraCalibrator::Update() {
   // Grid spacing
   ImGui::Text("Grid:");
   ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(Colors::RED));
+  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::RED));
   bool changeGrid0 =
       ImGui::DragInt("Xg", &mCameraParameters->NumGridPoints[0], 1, 1, 50);
   ImGui::PopStyleColor();
   ImGui::PopItemWidth();
   ImGui::SameLine();
   ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(Colors::GREEN));
+  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::GREEN));
   bool changeGrid1 =
       ImGui::DragInt("Yg", &mCameraParameters->NumGridPoints[1], 1, 1, 50);
   ImGui::PopStyleColor();
@@ -184,9 +187,11 @@ void CameraCalibrator::Update() {
   ImGui::Text("Rotation");
   ImGui::Text("%s", Utils::GlmVec3ToString(mCameraParameters->Rvec).c_str());
   ImGui::Text("Intrinsic");
-  ImGui::Text("%s", Utils::GlmMat3ToString(mCameraParameters->Intrinsic).c_str());
+  ImGui::Text("%s",
+              Utils::GlmMat3ToString(mCameraParameters->Intrinsic).c_str());
   ImGui::Text("Distorsion");
-  ImGui::Text("%s", Utils::GlmVec4ToString(mCameraParameters->Distortion).c_str());
+  ImGui::Text("%s",
+              Utils::GlmVec4ToString(mCameraParameters->Distortion).c_str());
   ImGui::End();
   if (changeRCSize0 || changeRCSize1 || changeGrid0 || changeGrid1 ||
       changeDim || changeGrid)
@@ -199,13 +204,14 @@ void CameraCalibrator::Update() {
   ImGui::Text("ImageSize: %f, %f", mImageSize.x, mImageSize.y);
   ImGui::Text("RC Points");
   ImGui::Separator();
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     ImU32 color = Colors::GetColorVector()[i + 2];
-    ImGui::PushStyleColor(ImGuiCol_Text, Colors::ToImVec4(color));
-    ImGui::Text("World %i: %s", i,
-                Utils::GlmVec2ToString(mCameraParameters->RCWorldPos[i]).c_str());
+    ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(color));
     ImGui::Text(
-        "Scaled Image %i: %s", i,
+        "World %zu: %s", i,
+        Utils::GlmVec2ToString(mCameraParameters->RCWorldPos[i]).c_str());
+    ImGui::Text(
+        "Scaled Image %zu: %s", i,
         Utils::GlmVec2ToString(mCameraParameters->RCImagePos[i] * mImageSize)
             .c_str());
     ImGui::PopStyleColor();
@@ -213,9 +219,10 @@ void CameraCalibrator::Update() {
   ImGui::Text("Coordinate Points");
   ImGui::Separator();
   // ImGui::PushStyleColor(ImGuiCol_Text, Colors::GetColorVector()[7]);
-  for (int i = 0; i < 4; i++) {
-    ImGui::Text("World: %s",
-                Utils::GlmVec2ToString(mCameraParameters->CSWorldPos[i]).c_str());
+  for (size_t i = 0; i < 4; i++) {
+    ImGui::Text(
+        "World: %s",
+        Utils::GlmVec2ToString(mCameraParameters->CSWorldPos[i]).c_str());
     ImGui::Text(
         "Scaled image: %s",
         Utils::GlmVec2ToString(mCameraParameters->CSImagePos[i] * mImageSize)
@@ -225,33 +232,19 @@ void CameraCalibrator::Update() {
   ImGui::Text("Grid Points");
   ImGui::Separator();
   ImGui::BeginChild("Scrolling");
-  for (int i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
+  for (size_t i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
     ImGui::Text(
-        "World %i: %s", i,
+        "World %zu: %s", i,
         Utils::GlmVec2ToString(mCameraParameters->GridWorldPos[i]).c_str());
     ImGui::Text(
-        "Scaled Img %i: %s", i,
+        "Scaled Img %zu: %s", i,
         Utils::GlmVec2ToString(mCameraParameters->GridImagePos[i] * mImageSize)
             .c_str());
   }
   ImGui::EndChild();
   ImGui::End();
 
-  ImGui::Begin("Logger");
-  std::vector<std::pair<LogLevel, std::string>> logs =
-      Logger::getInstance().GetLogs();
-  ImGui::PushTextWrapPos(ImGui::GetWindowWidth());
-  for (const auto &log : logs) {
-    ImU32 color = Colors::LogLevelToColor(static_cast<LogLevel>(log.first));
-    ImGui::PushStyleColor(ImGuiCol_Text, color);
-    ImGui::Text("%s", log.second.c_str());
-    ImGui::PopStyleColor();
-  }
-  if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
-    ImGui::SetScrollHereY(1.0f);
-  }
-  ImGui::PopTextWrapPos();
-  ImGui::End();
+  Logger::getInstance().ShowLogs();
 }
 
 void CameraCalibrator::draw() {
@@ -278,7 +271,7 @@ void CameraCalibrator::draw() {
     drawList->AddLine(startPos, endPos, color, 2.0f);
   }
   // Draw RC Circles
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     const glm::vec2 &pos = mCameraParameters->RCImagePos[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
                               imagePos.y + pos.y * mImageSize.y);
@@ -307,7 +300,7 @@ void CameraCalibrator::draw() {
     drawList->AddLine(startPos, endPos, color, 2.0f);
   }
   // Coordinate System Circles
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     const glm::vec2 &pos = mCameraParameters->CSImagePos[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
                               imagePos.y + pos.y * mImageSize.y);
@@ -336,7 +329,7 @@ void CameraCalibrator::drag() {
   ImVec2 imageSize = ImGui::GetItemRectSize();
   mImageSize = glm::vec2(imageSize.x, imageSize.y);
 
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     glm::vec2 &pos = mCameraParameters->RCImagePos[i];
     char &dragging = mRCImageDrag[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
@@ -374,8 +367,8 @@ void CameraCalibrator::recalculateGridPoints() {
   const glm::vec2 &numPoints = mCameraParameters->NumGridPoints;
   glm::vec2 dxy =
       mCameraParameters->RCWorldSize / (glm::vec2(numPoints) + glm::vec2(1));
-  for (int i = 1; i < numPoints.x + 1; i++) {
-    for (int j = 1; j < numPoints.y + 1; j++) {
+  for (size_t i = 1; i < numPoints.x + 1; i++) {
+    for (size_t j = 1; j < numPoints.y + 1; j++) {
       glm::vec2 gridPos = halfSize - glm::vec2(i, j) * dxy;
       mCameraParameters->GridWorldPos.push_back(
           glm::vec3(gridPos.x, gridPos.y, 0));
@@ -390,21 +383,30 @@ void CameraCalibrator::recalculateGridPoints() {
 }
 
 void CameraCalibrator::recalculate() {
-  if (!mChanged)
+  if (!mChanged || mLoadedImageFilename == "")
     return;
   mChanged = false;
+
+  // Rescale coordinate system for visibility
+  float csSize = (glm::min(mCameraParameters->RCWorldSize.x,
+                           mCameraParameters->RCWorldSize.y)) /
+                 5.0f;
+  mCameraParameters->CSWorldPos[0] = glm::vec3(0, 0, 0);
+  mCameraParameters->CSWorldPos[1] = glm::vec3(csSize, 0, 0);
+  mCameraParameters->CSWorldPos[2] = glm::vec3(0, csSize, 0);
+  mCameraParameters->CSWorldPos[3] = glm::vec3(0, 0, csSize);
 
   if (mCameraParameters->RCWorldSize.x > 0 &&
       mCameraParameters->RCWorldSize.y > 0)
     calculateRotationTranslation();
 
   if (mCameraParameters->ShowGrid) {
-    for (int i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
+    for (size_t i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
       mCameraParameters->GridImagePos[i] =
           projectPoint3DTo2D(mCameraParameters->GridWorldPos[i]) / mImageSize;
     }
   }
-  for (int i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 4; i++) {
     mCameraParameters->CSImagePos[i] =
         projectPoint3DTo2D(mCameraParameters->CSWorldPos[i]) / mImageSize;
   }
@@ -421,9 +423,11 @@ void CameraCalibrator::handleOpenImage() {
     if (imageFilePath != mLoadedImageFilename) {
       mLoadedImageFilename = imageFilePath;
       mTexture = mTextureManager.getTexture(imageFilePath);
-      mCameraParameters->RefImageFilePath = imageFilePath;
+      mCameraParameters->RefImageFilePath =
+          FileSystem::GetFileNameFromPath(imageFilePath);
       mChanged = true;
     }
+    mFolderPath = imageFilePath;
   }
 }
 
@@ -435,11 +439,14 @@ void CameraCalibrator::handleOpenParams() {
       continue;
 
     mCameraParameters->Load(paramFilePath);
-    const std::string &refImageFilePath = mCameraParameters->RefImageFilePath;
+    const std::string &refImageFilePath =
+        FileSystem::GetDirectoryFromPath(paramFilePath) + "/" +
+        mCameraParameters->RefImageFilePath;
     if (refImageFilePath != mLoadedImageFilename) {
       mLoadedImageFilename = refImageFilePath;
       mTexture = mTextureManager.getTexture(refImageFilePath);
     }
     mChanged = true;
+    mFolderPath = paramFilePath;
   }
 }

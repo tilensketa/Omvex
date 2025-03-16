@@ -32,6 +32,7 @@ public:
   void Update(float ts);
 
 private:
+  void getRelativePaths();
   void renderSceneToFramebuffer();
   void handleOpenParams();
   void handleOpenModel();
@@ -46,6 +47,9 @@ private:
 private:
   GLFWwindow *mWindow;
 
+  std::string mShaderFolderPath = "";
+  std::string mModelFolderPath = "";
+
   std::unique_ptr<Shader> mShadedShader;
   std::unique_ptr<Shader> mSegmentedShader;
   std::unique_ptr<Shader> mBgQuadShader;
@@ -56,7 +60,7 @@ private:
   std::shared_ptr<Camera> mCamera;
   std::shared_ptr<FBO> mFrameBuffer;
 
-  std::string mFolderPath = "/home/tilen/dev/Omvex/README.md";
+  std::string mFolderPath = "";
 
   CameraParametersManager mCameraParametersManager;
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;

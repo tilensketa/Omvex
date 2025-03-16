@@ -69,6 +69,10 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glDeleteShader(fragmentShader);
 }
 
+Shader::Shader(const std::string &folder, const std::string &vertex,
+               const std::string &fragment)
+    : Shader((folder + vertex).c_str(), (folder + fragment).c_str()) {}
+
 std::string Shader::readShaderFile(const char *filePath) {
   std::ifstream file(filePath);
   if (!file.is_open()) {

@@ -30,11 +30,19 @@ void Application::setupImGui() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
-  (void)io;
+  // (void)io;
+  std::vector<std::string> possibleConfigsPaths = {"../configs/",
+    "../../configs/"};
+  mConfigsFolder = FileSystem::FindExistingFolder(possibleConfigsPaths);
+  if(mConfigsFolder == ""){
+    Logger::getInstance().Fatal("Config folder not found!");
+  }
+  mImGuiIniFilePath = mConfigsFolder + "imgui.ini";
+  io.IniFilename = mImGuiIniFilePath.c_str();
+  Logger::getInstance().Debug("imgui.ini file path: " + mImGuiIniFilePath);
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-  io.IniFilename = "../imgui.ini";
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();

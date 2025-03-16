@@ -169,4 +169,23 @@ inline std::string RemoveFileExtension(const std::string &filePath) {
   return path.stem().string();
 }
 
+inline std::string GetFileNameFromPath(const std::string &path) {
+  std::filesystem::path filePath(path);
+  return filePath.filename().string();
+}
+inline std::string GetDirectoryFromPath(const std::string &path) {
+  std::filesystem::path filePath(path);
+  return filePath.parent_path().string();
+}
+
+inline std::string FindExistingFolder(const std::vector<std::string> &paths) {
+  for (const auto &path : paths) {
+    if (std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
+      return path; // Return the first existing folder
+    }
+  }
+  return "";
+}
+
 } // namespace FileSystem
+  //

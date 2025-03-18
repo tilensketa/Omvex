@@ -370,7 +370,8 @@ void CameraCalibrator::recalculateGridPoints() {
 }
 
 void CameraCalibrator::recalculate() {
-  if (!mChanged || mLoadedImageFilename == "" || mCameraParameters == nullptr)
+  if (!mChanged || mLoadedImageFilename == "" || mCameraParameters == nullptr ||
+      mImageSize.x == 0 || mImageSize.y == 0)
     return;
 
   mChanged--;

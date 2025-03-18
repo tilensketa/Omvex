@@ -14,20 +14,22 @@
 #include "Shader.h"
 
 #include "CameraParameters.h"
-#include "CameraParametersManager.h"
 #include "FileSystem.h"
 
 #include "CameraManager.h"
-#include "TextureManager.h"
+#include "Model.h"
+#include "ModelManager.h"
 #include "PhysicsManager.h"
 #include "RenderManager.h"
-#include "ModelManager.h"
-#include "Model.h"
+#include "TextureManager.h"
 
 class Viewport {
 public:
   Viewport();
   void SetWindow(GLFWwindow *window) { mWindow = window; }
+  void SetActiveFolder(std::shared_ptr<std::string> &activeFolder) {
+    mActiveFolder = activeFolder;
+  }
 
   void Update(float ts);
 
@@ -37,7 +39,7 @@ private:
   void handleOpenParams();
   void handleOpenModel();
 
-  void addModel(const std::string& modelPath);
+  void addModel(const std::string &modelPath);
   void removeModel();
 
   void addCamera(const std::string &path);
@@ -60,9 +62,8 @@ private:
   std::shared_ptr<Camera> mCamera;
   std::shared_ptr<FBO> mFrameBuffer;
 
-  std::string mFolderPath = "";
+  std::shared_ptr<std::string> mActiveFolder = nullptr;
 
-  CameraParametersManager mCameraParametersManager;
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
 
   TextureManager mTextureManager;

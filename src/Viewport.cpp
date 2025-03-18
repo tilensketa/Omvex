@@ -7,14 +7,6 @@ Viewport::Viewport() {
 
   mBgQuad = std::make_unique<Quad>();
 
-  // Load all backgrounds
-  /* std::string testFolder =
-      FileSystem::FindExistingFolder({"../test1/", "../../test1/"});
-  for (size_t i = 1; i < 8; i++) {
-    std::string path = testFolder + std::to_string(i) + ".json";
-    addCamera(path);
-  } */
-
   mSegmentedShader = std::make_unique<Shader>(
       mShaderFolderPath, "segmentedVert.glsl", "segmentedFrag.glsl");
   mShadedShader = std::make_unique<Shader>(mShaderFolderPath, "shadedVert.glsl",
@@ -78,7 +70,7 @@ void Viewport::Update(float ts) {
   bool canRender = !mPhysicsManager.IsSimulating();
   mRenderManager.Update(mFrameBuffer, canRender);
 
-  // First ImGui window with the framebuffer
+  // ImGui window with the framebuffer
   ImGui::Begin("MainView");
   if (mFrameBuffer == nullptr) {
     ImGui::Text("You need to add camera!");
@@ -160,7 +152,7 @@ void Viewport::Update(float ts) {
       ImGui::Text("You need to have camera in scene");
       ImGui::EndPopup();
     } else {
-      mRenderManager.UpdateRenderClick(mFolderPath);
+      mRenderManager.UpdateRenderClick(*mActiveFolder);
     }
   }
   if (mRenderManager.IsRendering()) {
@@ -226,7 +218,7 @@ void Viewport::renderSceneToFramebuffer() {
 
 void Viewport::handleOpenParams() {
   const std::vector<std::string> &paramFilePaths =
-      FileSystem::OpenFiles(mFolderPath, "Parameters .json", "*.json");
+      FileSystem::OpenFiles(*mActiveFolder, "Parameters .json", "*.json");
   for (const std::string &paramFilePath : paramFilePaths) {
     if (paramFilePath != "")
       addCamera(paramFilePath);
@@ -239,8 +231,8 @@ void Viewport::addCamera(const std::string &path) {
   std::string folderPath = FileSystem::GetDirectoryFromPath(path);
   glm::ivec2 resolution = mCameraParameters->ImageCalibratedSize;
   float aspectRatio = float(resolution.x) / resolution.y;
-  // int height = 640; // YOLO dimension
-  int height = 1640;
+  int height = 640; // YOLO dimension
+  // int height = 1640;
   int width = static_cast<int>(height * aspectRatio);
   mCamera = std::make_shared<Camera>(width, height, glm::vec3(0));
   mCamera->SetParameters(folderPath, *mCameraParameters);
@@ -284,7 +276,7 @@ void Viewport::switchCamFBO() {
 
 void Viewport::handleOpenModel() {
   const std::vector<std::string> &modelFilePaths =
-      FileSystem::OpenFiles(mFolderPath, "Model .obj", "*.obj");
+      FileSystem::OpenFiles(*mActiveFolder, "Model .obj", "*.obj");
   for (const std::string &modelFilePath : modelFilePaths) {
     if (modelFilePath != "") {
       addModel(modelFilePath);

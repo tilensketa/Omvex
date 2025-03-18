@@ -30,8 +30,8 @@ void Model::loadModel(const std::string &path) {
 
   Logger::getInstance().Debug("MODEL");
   Logger::getInstance().Debug("|-Model path: " + path);
-  Logger::getInstance().Debug("  |- Max: " + Utils::GlmVec3ToString(mMaxVert));
-  Logger::getInstance().Debug("  |- Min: " + Utils::GlmVec3ToString(mMinVert));
+  Logger::getInstance().Debug("  |- Max: " + Utils::GlmToString::Vec3(mMaxVert));
+  Logger::getInstance().Debug("  |- Min: " + Utils::GlmToString::Vec3(mMinVert));
   Logger::getInstance().Debug("|-Number of meshes: " +
                               std::to_string(mMeshes.size()));
   int i = 0;

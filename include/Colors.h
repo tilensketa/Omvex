@@ -32,12 +32,12 @@ constexpr ImU32 WHITE = IM_COL32(255, 255, 255, 255);
 constexpr ImU32 BLACK = IM_COL32(0, 0, 0, 255);
 
 // Log level to color mapping (as ImU32)
-constexpr ImU32 INFO_COLOR = IM_COL32(255, 255, 255, 255); // White
-constexpr ImU32 SUCCESS_COLOR = IM_COL32(0, 255, 0, 255);  // Green
-constexpr ImU32 WARN_COLOR = IM_COL32(255, 255, 0, 255);   // Yellow
-constexpr ImU32 ERROR_COLOR = IM_COL32(255, 0, 0, 255);    // Red
-constexpr ImU32 FATAL_COLOR = IM_COL32(255, 0, 255, 255);  // Magenta
-constexpr ImU32 DEBUG_COLOR = IM_COL32(0, 255, 255, 255);  // Cyan
+constexpr ImU32 INFO_COLOR = GRAY;
+constexpr ImU32 SUCCESS_COLOR = GREEN;
+constexpr ImU32 WARN_COLOR = YELLOW;
+constexpr ImU32 ERROR_COLOR = RED;
+constexpr ImU32 FATAL_COLOR = MAGENTA;
+constexpr ImU32 DEBUG_COLOR = CYAN;
 
 inline std::vector<ImU32> GetLogColorsImU32() {
   static std::vector<ImU32> colors = {INFO_COLOR,  WARN_COLOR,    ERROR_COLOR,
@@ -46,14 +46,14 @@ inline std::vector<ImU32> GetLogColorsImU32() {
 }
 
 // Retrieve all colors as a vector
-inline const std::vector<ImU32> &GetColorVector() {
+inline const std::vector<ImU32> &GetColorsImU32() {
   static const std::vector<ImU32> colors = {
       RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA, GRAY, ORANGE, PURPLE};
   return colors;
 }
 
 // Convert ImVec4 to IM_COL32
-inline ImU32 ToImCol32(const ImVec4 &color) {
+inline ImU32 ImVec4ToImCol32(const ImVec4 &color) {
   return IM_COL32(static_cast<int>(color.x * 255.0f), // Red
                   static_cast<int>(color.y * 255.0f), // Green
                   static_cast<int>(color.z * 255.0f), // Blue
@@ -80,7 +80,6 @@ inline std::vector<glm::vec3> GenerateSegmentedColors(int numMeshes) {
     glm::vec3 hsv = glm::vec3(h, s, v);
     glm::vec3 color = glm::rgbColor(hsv);
     colors[i] = color;
-    // colors.push_back(color);
   }
   return colors;
 }

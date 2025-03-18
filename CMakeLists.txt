@@ -174,6 +174,7 @@ set(SOURCES
     src/RenderManager.cpp
     src/ModelManager.cpp
     src/Model.cpp
+    src/CameraParametersManager.cpp
     # Add other source files here if any
 )
 

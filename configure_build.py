@@ -7,12 +7,20 @@ def get_build_type():
     print("1. Debug")
     print("2. Release")
     choice = input("Enter choice (1/2): ").strip()
-    return "Debug" if choice == '1' else "Release"
+    build_type = "Release"
+    if choice == "1": build_type = "Debug"
+    elif choice == "2": build_type = "Release"
+    else:
+        print("Incorrect build type selected. Defaulting to Release")
+        build_type = "Release"
+    print(f"Build type: {build_type}")
+    return build_type
 
 def get_opencv_path():
     opencv_path = input("\nEnter the full path to the OpenCV directory (default: C:/opencv/build): ").strip()
     if opencv_path == "":
-        return "C:/opencv/build"
+         opencv_path = "C:/opencv/build"
+    print(f"OpenCV path: {opencv_path}")
     return opencv_path
 
 def get_compile_commands():
@@ -20,7 +28,14 @@ def get_compile_commands():
     print("1. Yes")
     print("2. No")
     choice = input("Enter choice (1/2): ").strip()
-    return False if choice == "2" else True
+    compile_commands = True
+    if choice == "1": compile_commands = True
+    elif choice == "2": compile_commands = False
+    else:
+        print("Incorrect compile commands selected. Defaulting to True")
+        compile_commands = True
+    print(f"Compile commands: {compile_commands}")
+    return compile_commands
 
 def run_cmake(build_type, opencv_path, compile_commands):
     print("\nRunning CMake to configure and build the project...")

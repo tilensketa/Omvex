@@ -26,6 +26,7 @@ private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)>
   initWindow(unsigned int width, unsigned int height);
   void setupImGui();
+  void imGuiSetTheme();
   void processInput();
 
   void renderScene();
@@ -49,4 +50,6 @@ private:
 
   std::string mConfigsFolder;
   std::string mImGuiIniFilePath;
+  bool mIsLightTheme = false;
+  std::shared_ptr<std::string> mActiveFolder;
 };

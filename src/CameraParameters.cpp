@@ -1,8 +1,11 @@
 #include "CameraParameters.h"
 #include "Serialize.h"
+#include "Logger.h"
 
 CameraParameters::CameraParameters(const std::string &filePath) {
+  Path = filePath;
   RefImageFilePath = filePath;
+  Loaded = false;
   std::vector<glm::vec2> positions = {
       {0.983, 0.391}, {0.438, 0.072}, {0.076, 0.348}, {0.707, 0.967}};
   for (size_t i = 0; i < 4; i++) {
@@ -50,14 +53,14 @@ void CameraParameters::FromJson(const json &j) {
   Serialize::FromJson(j.at("Rotation"), Rotation);
 }
 
-void CameraParameters::Save(const std::string &file) {
-  std::ofstream outFile(file);
+void CameraParameters::Save() {
+  std::ofstream outFile(Path);
   if (outFile.is_open()) {
     outFile << ToJson().dump(4);
     outFile.close();
-    Logger::getInstance().Success("Successfully saved file: " + file);
+    Logger::getInstance().Success("Successfully saved file: " + Path);
   } else {
-    Logger::getInstance().Error("Failed to open file for writing: " + file);
+    Logger::getInstance().Error("Failed to open file for writing: " + Path);
   }
 }
 void CameraParameters::Load(const std::string &filePath) {
@@ -67,6 +70,8 @@ void CameraParameters::Load(const std::string &filePath) {
     inFile >> j;
     inFile.close();
     FromJson(j);
+    Path = filePath;
+    Loaded = true;
   } else {
     Logger::getInstance().Error("Failed to open file for reading: " + filePath);
   }

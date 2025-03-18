@@ -1,30 +1,31 @@
 #pragma once
 
 #include "CameraParameters.h"
-#include "Logger.h"
 #include <memory>
-#include <unordered_map>
 
 class CameraParametersManager {
 public:
-  // Load or retrieve a camera parameters
-  std::shared_ptr<CameraParameters>
-  getCameraParameters(const std::string &paramPath) {
-    // Load the camera parameters if not already loaded
-    Logger::getInstance().Info("Loading and caching new camera parameteres: " + paramPath);
-    std::shared_ptr<CameraParameters> parameters;
-    if (paramPath == "") {
-      parameters = std::make_shared<CameraParameters>(paramPath);
-    } else {
-      /* parameters =
-          std::make_shared<CameraParameters>(CameraParameters::Load(paramPath)); */
-    }
-    mCameraParameters.push_back(parameters);
-    mParameterMap[paramPath] = mCameraParameters.size() - 1;
-    return parameters;
+  void AddParameter(const std::string &path, bool isParam);
+  void Remove();
+
+  void SetDimImage(bool dim);
+  void SetShowGrid(bool show);
+
+  bool ShowParameters();
+
+  const int GetSelectedParameterId() const { return mSelectedParameterId; }
+  std::shared_ptr<CameraParameters> GetCameraParameter() {
+    if (mSelectedParameterId == -1)
+      return nullptr;
+    return mCameraParameters[mSelectedParameterId];
+  }
+  const std::vector<std::shared_ptr<CameraParameters>> &GetCameraParameters() {
+    return mCameraParameters;
   }
 
 private:
   std::vector<std::shared_ptr<CameraParameters>> mCameraParameters;
-  std::unordered_map<std::string, size_t> mParameterMap;
+  std::vector<std::string> mParameterNames;
+  int mSelectedParameterId = -1;
+  int mChange = false;
 };

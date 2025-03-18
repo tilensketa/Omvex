@@ -1,4 +1,6 @@
+#include "Colors.h"
 #include <glm/glm.hpp>
+#include <imgui.h>
 #include <opencv2/opencv.hpp>
 #include <reactphysics3d/reactphysics3d.h>
 #include <sstream>
@@ -6,82 +8,122 @@
 
 namespace Utils {
 
-inline std::string GlmVec2ToString(const glm::vec2 &vec) {
+// Glm To String Convertion Utils
+namespace GlmToString {
+inline std::string Vec2(const glm::vec2 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << "]";
   return oss.str();
 }
-inline std::string GlmVec3ToString(const glm::vec3 &vec) {
+inline std::string Vec3(const glm::vec3 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]";
   return oss.str();
 }
-inline std::string GlmVec4ToString(const glm::vec4 &vec) {
+inline std::string Vec4(const glm::vec4 &vec) {
   std::ostringstream oss;
   oss << "[" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.z << "]";
   return oss.str();
 }
 
-// Convert glm::mat3 to string
-inline std::string GlmMat3ToString(const glm::mat3 &mat) {
+inline std::string Mat3(const glm::mat3 &mat) {
   std::ostringstream oss;
-  // oss << "[\n";
   for (size_t i = 0; i < 3; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << "]\n";
   }
-  // oss << "]";
   return oss.str();
 }
 
-// Convert glm::mat3 to string
-inline std::string GlmMat3x4ToString(const glm::mat3x4 &mat) {
+inline std::string Mat3x4(const glm::mat3x4 &mat) {
   std::ostringstream oss;
-  // oss << "[\n";
   for (size_t i = 0; i < 3; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
         << mat[3][i] << "]\n";
   }
-  // oss << "]";
   return oss.str();
 }
 
-// Convert glm::mat4 to string
-inline std::string GlmMat4ToString(const glm::mat4 &mat) {
+inline std::string Mat4(const glm::mat4 &mat) {
   std::ostringstream oss;
-  oss << "[\n";
   for (size_t i = 0; i < 4; ++i) {
     oss << "[" << mat[0][i] << ", " << mat[1][i] << ", " << mat[2][i] << ", "
         << mat[3][i] << "]\n";
   }
-  oss << "]";
   return oss.str();
 }
+} // namespace GlmToString
 
-inline cv::Vec3f GlmToCvVec3(const glm::vec3 &vec) {
-  cv::Vec3f cvVec = cv::Vec3f(vec.x, vec.y, vec.z);
-  return cvVec;
+// Glm To ImGui Text Conversion Utils
+namespace GlmToImGuiText {
+// Generic function to print vectors (glm::vec3, glm::vec4, etc.)
+template <typename T, size_t N>
+inline void Vec(const std::string &name, const T &vec) {
+  static_assert(N > 0 && N <= 4,
+                "Only glm::vec2, vec3, or vec4 are supported.");
+
+  ImGui::Text("%s", name.c_str());
+  std::string tableName = name + "_Vec";
+
+  if (ImGui::BeginTable(tableName.c_str(), N, ImGuiTableFlags_Borders)) {
+    ImGui::TableNextRow();
+    for (size_t i = 0; i < N; i++) {
+      ImGui::TableSetColumnIndex(i);
+      ImGui::Text("%.3f", vec[i]);
+    }
+    ImGui::EndTable();
+  }
 }
 
-inline cv::Vec4f GlmToCvVec4(const glm::vec4 &vec) {
-  cv::Vec4f cvVec = cv::Vec4f(vec.x, vec.y, vec.z, vec.z);
-  return cvVec;
-}
-// Convert glm::vec3 to cv::Mat (3x1 column vector)
-inline cv::Mat GlmVec3ToCvMat(const glm::vec3 &vec) {
-  return (cv::Mat_<float>(3, 1) << vec.x, vec.y, vec.z);
+// Generic function to print matrices (glm::mat3, glm::mat4, etc.)
+template <typename T, size_t N>
+inline void Mat(const std::string &name, const T &mat) {
+  static_assert(N > 0 && N <= 4,
+                "Only glm::mat2, mat3, or mat4 are supported.");
+
+  ImGui::Text("%s", name.c_str());
+  std::string tableName = name + "_Mat";
+
+  if (ImGui::BeginTable(tableName.c_str(), N, ImGuiTableFlags_Borders)) {
+    for (size_t row = 0; row < N; row++) {
+      ImGui::TableNextRow();
+      for (size_t col = 0; col < N; col++) {
+        ImGui::TableSetColumnIndex(col);
+        ImGui::Text("%.3f", mat[col][row]); // GLM is column-major
+      }
+    }
+    ImGui::EndTable();
+  }
 }
 
-// Convert glm::vec4 to cv::Mat (4x1 column vector)
-inline cv::Mat GlmVec4ToCvMat(const glm::vec4 &vec) {
-  return (cv::Mat_<float>(4, 1) << vec.x, vec.y, vec.z, vec.w);
+// Convenience functions for specific vector/matrix types
+inline void Vec3(const std::string &name, const glm::vec3 &vec) {
+  Vec<glm::vec3, 3>(name, vec);
+}
+inline void Vec4(const std::string &name, const glm::vec4 &vec) {
+  Vec<glm::vec4, 4>(name, vec);
+}
+inline void Mat3(const std::string &name, const glm::mat3 &mat) {
+  Mat<glm::mat3, 3>(name, mat);
+}
+inline void Mat4(const std::string &name, const glm::mat4 &mat) {
+  Mat<glm::mat4, 4>(name, mat);
 }
 
-// Convert glm::mat3x3 to cv::Mat
-inline cv::Mat GlmMat3x3ToCvMat(const glm::mat3x3 &mat) {
-  // Create a cv::Mat with the same size (3x3) and type (CV_32F)
+} // namespace GlmToImGuiText
+
+// Glm To Cv Convertion Utils
+namespace GlmToCv {
+inline cv::Mat Vec3Mat(const glm::vec3 &vec) {
+  return cv::Mat(3, 1, CV_32F, (void *)&vec[0]);
+}
+
+inline cv::Mat Vec4Mat(const glm::vec4 &vec) {
+  return cv::Mat(4, 1, CV_32F, (void *)&vec[0]);
+}
+
+inline cv::Mat Mat3x3Mat(const glm::mat3x3 &mat) {
   cv::Mat cvMat(3, 3, CV_32F);
 
-  // Manually copy the elements of glm::mat3x3 into cv::Mat
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       cvMat.at<float>(j, i) = mat[i][j]; // WARN glm column major, cv row major
@@ -90,34 +132,11 @@ inline cv::Mat GlmMat3x3ToCvMat(const glm::mat3x3 &mat) {
 
   return cvMat;
 }
+} // namespace GlmToCv
 
-// Convert glm::vec3 to cv::Mat
-inline cv::Mat glmToCvMat(const glm::vec3 &vec) {
-  // Convert glm::vec3 to a 3x1 cv::Mat
-  return cv::Mat(3, 1, CV_32F, (void *)&vec[0]);
-}
-
-// Convert cv::Mat to glm::mat3x3
-inline glm::mat3x3 cvToGlmMat3x3(const cv::Mat &mat) {
-  glm::mat3x3 glmMat;
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 3; ++j) {
-      if (mat.type() == CV_32F) {
-        glmMat[j][i] = mat.at<float>(i, j); // GLM is column-major
-      } else if (mat.type() == CV_64F) {
-        glmMat[j][i] =
-            static_cast<float>(mat.at<double>(i, j)); // Convert to float
-      }
-    }
-  }
-  return glmMat;
-}
-
-inline glm::vec3 CvVec3fToGlmVec3(const cv::Vec3f &vec) {
-  return glm::vec3(vec[0], vec[1], vec[2]);
-}
-
-inline glm::vec3 CvMatToGlmVec3(const cv::Mat &mat) {
+// Cv To Glm Convertion Utils
+namespace CvToGlm {
+inline glm::vec3 MatVec3(const cv::Mat &mat) {
   if (mat.type() == CV_32F) {
     return glm::vec3(mat.at<float>(0, 0), mat.at<float>(1, 0),
                      mat.at<float>(2, 0));
@@ -127,7 +146,7 @@ inline glm::vec3 CvMatToGlmVec3(const cv::Mat &mat) {
   }
   return glm::vec3(0);
 }
-inline glm::vec4 CvMatToGlmVec4(const cv::Mat &mat) {
+inline glm::vec4 MatVec4(const cv::Mat &mat) {
   if (mat.type() == CV_32F) {
     return glm::vec4(mat.at<float>(0, 0), mat.at<float>(1, 0),
                      mat.at<float>(2, 0), mat.at<float>(3, 0));
@@ -138,7 +157,7 @@ inline glm::vec4 CvMatToGlmVec4(const cv::Mat &mat) {
   return glm::vec4(0);
 }
 
-inline glm::mat3x3 CvMatToGlmMat3x3(const cv::Mat &mat) {
+inline glm::mat3x3 MatMat3x3(const cv::Mat &mat) {
   glm::mat3x3 glmMat;
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
@@ -152,38 +171,7 @@ inline glm::mat3x3 CvMatToGlmMat3x3(const cv::Mat &mat) {
   }
   return glmMat;
 }
-
-inline glm::vec3 cvToGlmVec3(const cv::Mat &mat) {
-  // Ensure the input is a 1x3 or 3x1 matrix
-  if (!((mat.rows == 1 && mat.cols == 3) || (mat.rows == 3 && mat.cols == 1))) {
-    throw std::invalid_argument("Input cv::Mat must be a 1x3 or 3x1 matrix.");
-  }
-
-  glm::vec3 glmVec;
-
-  if (mat.type() == CV_32F) {
-    glmVec =
-        glm::vec3(mat.at<float>(0, 0),
-                  mat.at<float>(mat.rows == 1 ? 0 : 1, mat.rows == 1 ? 1 : 0),
-                  mat.at<float>(mat.rows == 1 ? 0 : 2, mat.rows == 1 ? 2 : 0));
-  } else if (mat.type() == CV_64F) {
-    glmVec = glm::vec3(static_cast<float>(mat.at<double>(0, 0)),
-                       static_cast<float>(mat.at<double>(
-                           mat.rows == 1 ? 0 : 1, mat.rows == 1 ? 1 : 0)),
-                       static_cast<float>(mat.at<double>(
-                           mat.rows == 1 ? 0 : 2, mat.rows == 1 ? 2 : 0)));
-  } else {
-    throw std::invalid_argument(
-        "Input cv::Mat must be of type CV_32F or CV_64F.");
-  }
-
-  return glmVec;
-}
-
-/* // Convert cv::Mat to glm::vec3
-inline glm::vec3 cvToGlmVec3(const cv::Mat &mat) {
-  return glm::vec3(mat.at<float>(0), mat.at<float>(1), mat.at<float>(2));
-} */
+} // namespace CvToGlm
 
 inline glm::mat4
 ReactMat3Vec3ToGlmMat4(const reactphysics3d::Matrix3x3 &orientation,
@@ -201,4 +189,64 @@ ReactMat3Vec3ToGlmMat4(const reactphysics3d::Matrix3x3 &orientation,
   return mat;
 }
 
+namespace ImGuiHelpers {
+// Generic function for labeled InputFloat with color
+inline bool ColoredInputFloat(const char *label, float *value,
+                              const ImVec4 &color, float width = 100.0f) {
+  ImGui::PushItemWidth(width);
+  ImGui::PushStyleColor(ImGuiCol_Text, color);
+  bool changed = ImGui::InputFloat(label, value);
+  ImGui::PopStyleColor();
+  ImGui::PopItemWidth();
+  return changed;
+}
+
+// Generic function for labeled DragInt with color
+inline bool ColoredDragInt(const char *label, int *value, const ImVec4 &color,
+                           int width = 100.0f, int speed = 1, int min = 1,
+                           int max = 50) {
+  ImGui::PushItemWidth(width);
+  ImGui::PushStyleColor(ImGuiCol_Text, color);
+  bool changed = ImGui::DragInt(label, value, speed, min, max);
+  ImGui::PopStyleColor();
+  ImGui::PopItemWidth();
+  return changed;
+}
+
+// Helper function to render a table with columns, values, and colors
+inline void RenderPointsTable(const std::string &tableName,
+                              const glm::vec3 worldPos[4],
+                              const glm::vec2 imagePos[4],
+                              const glm::vec2 &imageSize,
+                              const std::vector<ImU32> &colors) {
+  ImGui::Columns(3, tableName.c_str(), false);
+  ImGui::SetColumnWidth(0, 40.0f);
+
+  ImGui::Text("Id");
+  ImGui::NextColumn();
+  ImGui::Text("World Coordinates");
+  ImGui::NextColumn();
+  ImGui::Text("Scaled Image Coordinates");
+  ImGui::NextColumn();
+  ImGui::Separator();
+
+  for (size_t i = 0; i < 4; i++) {
+    ImU32 color = colors[i];
+    ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(color));
+
+    ImGui::Text("%zu", i);
+    ImGui::NextColumn();
+    ImGui::Text("%s", Utils::GlmToString::Vec3(worldPos[i]).c_str());
+    ImGui::NextColumn();
+    ImGui::Text("%s",
+                Utils::GlmToString::Vec2(imagePos[i] * imageSize).c_str());
+    ImGui::NextColumn();
+
+    ImGui::PopStyleColor();
+  }
+  ImGui::Columns(1);
+  ImGui::Separator();
+}
+
+} // namespace ImGuiHelpers
 } // namespace Utils

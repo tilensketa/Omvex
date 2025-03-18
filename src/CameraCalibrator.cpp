@@ -6,9 +6,15 @@
 
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 #include <opencv2/opencv.hpp>
 
+#define UPDATE_STEPS 2
+
 void CameraCalibrator::calculateRotationTranslation() {
+  if (mCameraParameters == nullptr)
+    return;
   std::vector<cv::Point3f> objectPoints(4);
   std::vector<cv::Point2f> imagePoints(4);
   for (size_t i = 0; i < 4; i++) {
@@ -44,34 +50,34 @@ void CameraCalibrator::calculateRotationTranslation() {
     }
     prev_error = error;
 
-    mCameraParameters->Tvec = Utils::CvMatToGlmVec3(tvec);
-    mCameraParameters->Rvec = Utils::CvMatToGlmVec3(rvec);
-    mCameraParameters->Intrinsic = Utils::CvMatToGlmMat3x3(intrinsic);
-    mCameraParameters->Distortion = Utils::CvMatToGlmVec4(distortion);
+    mCameraParameters->Tvec = Utils::CvToGlm::MatVec3(tvec);
+    mCameraParameters->Rvec = Utils::CvToGlm::MatVec3(rvec);
+    mCameraParameters->Intrinsic = Utils::CvToGlm::MatMat3x3(intrinsic);
+    mCameraParameters->Distortion = Utils::CvToGlm::MatVec4(distortion);
 
     if (glm::abs(step) < 1) {
       break;
     }
   }
-  cv::Mat tvec = Utils::GlmVec3ToCvMat(mCameraParameters->Tvec);
-  cv::Mat rvec = Utils::GlmVec3ToCvMat(mCameraParameters->Rvec);
+  cv::Mat tvec = Utils::GlmToCv::Vec3Mat(mCameraParameters->Tvec);
+  cv::Mat rvec = Utils::GlmToCv::Vec3Mat(mCameraParameters->Rvec);
 
   cv::Mat R;
   cv::Rodrigues(rvec, R);
 
   cv::Mat cameraPosition = -R.t() * tvec;
   cv::Mat cameraRotation = R.t();
-  mCameraParameters->Translation = Utils::CvMatToGlmVec3(cameraPosition);
-  mCameraParameters->Rotation = Utils::CvMatToGlmMat3x3(cameraRotation);
+  mCameraParameters->Translation = Utils::CvToGlm::MatVec3(cameraPosition);
+  mCameraParameters->Rotation = Utils::CvToGlm::MatMat3x3(cameraRotation);
 }
 
 glm::vec2 CameraCalibrator::projectPoint3DTo2D(const glm::vec3 &point3D) {
   std::vector<cv::Point3f> worldPoints = {
       cv::Point3f(point3D.x, point3D.y, point3D.z)};
-  cv::Mat tvec = Utils::GlmVec3ToCvMat(mCameraParameters->Tvec);
-  cv::Mat rvec = Utils::GlmVec3ToCvMat(mCameraParameters->Rvec);
-  cv::Mat intrinsic = Utils::GlmMat3x3ToCvMat(mCameraParameters->Intrinsic);
-  cv::Mat distortion = Utils::GlmVec4ToCvMat(mCameraParameters->Distortion);
+  cv::Mat tvec = Utils::GlmToCv::Vec3Mat(mCameraParameters->Tvec);
+  cv::Mat rvec = Utils::GlmToCv::Vec3Mat(mCameraParameters->Rvec);
+  cv::Mat intrinsic = Utils::GlmToCv::Mat3x3Mat(mCameraParameters->Intrinsic);
+  cv::Mat distortion = Utils::GlmToCv::Vec4Mat(mCameraParameters->Distortion);
 
   std::vector<cv::Point2f> imagePoints;
   cv::projectPoints(worldPoints, rvec, tvec, intrinsic, distortion,
@@ -84,14 +90,10 @@ glm::vec2 project(const glm::vec2 &A, const glm::vec2 &B) {
 }
 
 CameraCalibrator::CameraCalibrator() {
-  mCameraParameters = std::make_unique<CameraParameters>("");
-  recalculateGridPoints();
+  mCameraParameters = std::make_shared<CameraParameters>("");
 }
 
 void CameraCalibrator::Update() {
-  recalculateGridPoints();
-  recalculate();
-
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Open Image")) {
@@ -102,6 +104,9 @@ void CameraCalibrator::Update() {
       }
       if (ImGui::MenuItem("Save Params")) {
         saveParams();
+      }
+      if (ImGui::MenuItem("Remove")) {
+        mCameraParametersManager.Remove();
       }
       ImGui::EndMenu();
     }
@@ -137,6 +142,13 @@ void CameraCalibrator::Update() {
   ImGui::Begin("Settings");
   ImGui::Text("CAMERA CALIBRATION");
   ImGui::Separator();
+
+  bool change = mCameraParametersManager.ShowParameters();
+  if (change) {
+    mCameraParameters = mCameraParametersManager.GetCameraParameter();
+    onParamChange();
+  }
+
   if (ImGui::Button("Open Image")) {
     handleOpenImage();
   }
@@ -145,110 +157,89 @@ void CameraCalibrator::Update() {
     handleOpenParams();
   }
   ImGui::SameLine();
-  if (ImGui::Button("Save Params")) {
-    saveParams();
+  if (ImGui::Button("Remove")) {
+    mCameraParametersManager.Remove();
   }
 
-  bool changeDim = ImGui::Checkbox("Dim image", &mCameraParameters->DimImage);
-  ImGui::SameLine();
-  bool changeGrid =
-      ImGui::Checkbox("Show grid points", &mCameraParameters->ShowGrid);
+  if (mCameraParameters != nullptr &&
+      mCameraParameters->RefImageFilePath != "") {
+    bool changeDim = ImGui::Checkbox("Dim image", &mCameraParameters->DimImage);
+    if (changeDim)
+      mCameraParametersManager.SetDimImage(mCameraParameters->DimImage);
+    ImGui::SameLine();
+    bool changeGrid =
+        ImGui::Checkbox("Show grid points", &mCameraParameters->ShowGrid);
+    if (changeGrid)
+      mCameraParametersManager.SetShowGrid(mCameraParameters->ShowGrid);
 
-  // Rectangle Dimension
-  ImGui::Text("Dimension:");
-  ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::RED));
-  bool changeRCSize0 =
-      ImGui::InputFloat("Xd", &mCameraParameters->RCWorldSize[0]);
-  ImGui::PopStyleColor();
-  ImGui::PopItemWidth();
-  ImGui::SameLine();
-  ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::GREEN));
-  bool changeRCSize1 =
-      ImGui::InputFloat("Yd", &mCameraParameters->RCWorldSize[1]);
-  ImGui::PopStyleColor();
-  ImGui::PopItemWidth();
+    ImGui::Text("Worlds Rectangle Dimension:");
+    ImVec4 red = Colors::ImU32ToImVec4(Colors::RED);
+    ImVec4 green = Colors::ImU32ToImVec4(Colors::GREEN);
+    bool changeRCSize0 = Utils::ImGuiHelpers::ColoredInputFloat(
+        "##Xd", &mCameraParameters->RCWorldSize[0], red);
+    ImGui::SameLine();
+    bool changeRCSize1 = Utils::ImGuiHelpers::ColoredInputFloat(
+        "##Yd", &mCameraParameters->RCWorldSize[1], green);
 
-  // Grid spacing
-  ImGui::Text("Grid:");
-  ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::RED));
-  bool changeGrid0 =
-      ImGui::DragInt("Xg", &mCameraParameters->NumGridPoints[0], 1, 1, 50);
-  ImGui::PopStyleColor();
-  ImGui::PopItemWidth();
-  ImGui::SameLine();
-  ImGui::PushItemWidth(100.0f);
-  ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(Colors::GREEN));
-  bool changeGrid1 =
-      ImGui::DragInt("Yg", &mCameraParameters->NumGridPoints[1], 1, 1, 50);
-  ImGui::PopStyleColor();
-  ImGui::PopItemWidth();
+    ImGui::Text("Number Of Grid Points:");
+    bool changeGrid0 = Utils::ImGuiHelpers::ColoredDragInt(
+        "##Xg", &mCameraParameters->NumGridPoints[0], red);
+    ImGui::SameLine();
+    bool changeGrid1 = Utils::ImGuiHelpers::ColoredDragInt(
+        "##Yg", &mCameraParameters->NumGridPoints[1], green);
 
-  ImGui::Text("Translation");
-  ImGui::Text("%s", Utils::GlmVec3ToString(mCameraParameters->Tvec).c_str());
-  ImGui::Text("Rotation");
-  ImGui::Text("%s", Utils::GlmVec3ToString(mCameraParameters->Rvec).c_str());
-  ImGui::Text("Intrinsic");
-  ImGui::Text("%s",
-              Utils::GlmMat3ToString(mCameraParameters->Intrinsic).c_str());
-  ImGui::Text("Distorsion");
-  ImGui::Text("%s",
-              Utils::GlmVec4ToString(mCameraParameters->Distortion).c_str());
+    if (ImGui::Button("Save Params")) {
+      saveParams();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Save All Params")) {
+      for (std::shared_ptr<CameraParameters> param :
+           mCameraParametersManager.GetCameraParameters()) {
+        param->Save();
+      }
+    }
+
+    ImGui::Separator();
+    ImGui::Separator();
+
+    ImGui::Text("Reference Image: %s",
+                mCameraParameters->RefImageFilePath.c_str());
+    ImGui::Text("Path: %s", mCameraParameters->Path.c_str());
+
+    Utils::GlmToImGuiText::Vec3("Translation", mCameraParameters->Tvec);
+    Utils::GlmToImGuiText::Vec3("Rotation", mCameraParameters->Rvec);
+    Utils::GlmToImGuiText::Mat3("Intrinsics", mCameraParameters->Intrinsic);
+    Utils::GlmToImGuiText::Vec4("Distorsion", mCameraParameters->Distortion);
+    if (changeRCSize0 || changeRCSize1 || changeGrid0 || changeGrid1 ||
+        changeDim || changeGrid)
+      mChanged = UPDATE_STEPS;
+  }
   ImGui::End();
-  if (changeRCSize0 || changeRCSize1 || changeGrid0 || changeGrid1 ||
-      changeDim || changeGrid)
-    mChanged = true;
 
   ImGui::Begin("Debug");
   if (mTexture)
     ImGui::Text("OriginalImageSize: %f, %f", mTexture->GetSize().x,
                 mTexture->GetSize().y);
-  ImGui::Text("ImageSize: %f, %f", mImageSize.x, mImageSize.y);
-  ImGui::Text("RC Points");
-  ImGui::Separator();
-  for (size_t i = 0; i < 4; i++) {
-    ImU32 color = Colors::GetColorVector()[i + 2];
-    ImGui::PushStyleColor(ImGuiCol_Text, Colors::ImU32ToImVec4(color));
-    ImGui::Text(
-        "World %zu: %s", i,
-        Utils::GlmVec2ToString(mCameraParameters->RCWorldPos[i]).c_str());
-    ImGui::Text(
-        "Scaled Image %zu: %s", i,
-        Utils::GlmVec2ToString(mCameraParameters->RCImagePos[i] * mImageSize)
-            .c_str());
-    ImGui::PopStyleColor();
+  if (mCameraParameters != nullptr && mLoadedImageFilename != "") {
+    ImGui::Text("ImageSize: %f, %f", mImageSize.x, mImageSize.y);
+    ImGui::Separator();
+
+    ImGui::Text("Rectangle Coordinate Points");
+    Utils::ImGuiHelpers::RenderPointsTable(
+        "RCPointsColumns", mCameraParameters->RCWorldPos,
+        mCameraParameters->RCImagePos, mImageSize, mRCColors);
+
+    ImGui::Text("Coordinate System Points");
+    Utils::ImGuiHelpers::RenderPointsTable(
+        "CSPointsColumns", mCameraParameters->CSWorldPos,
+        mCameraParameters->CSImagePos, mImageSize, mCSColors);
   }
-  ImGui::Text("Coordinate Points");
-  ImGui::Separator();
-  // ImGui::PushStyleColor(ImGuiCol_Text, Colors::GetColorVector()[7]);
-  for (size_t i = 0; i < 4; i++) {
-    ImGui::Text(
-        "World: %s",
-        Utils::GlmVec2ToString(mCameraParameters->CSWorldPos[i]).c_str());
-    ImGui::Text(
-        "Scaled image: %s",
-        Utils::GlmVec2ToString(mCameraParameters->CSImagePos[i] * mImageSize)
-            .c_str());
-  }
-  // ImGui::PopStyleColor();
-  ImGui::Text("Grid Points");
-  ImGui::Separator();
-  ImGui::BeginChild("Scrolling");
-  for (size_t i = 0; i < mCameraParameters->GridWorldPos.size(); i++) {
-    ImGui::Text(
-        "World %zu: %s", i,
-        Utils::GlmVec2ToString(mCameraParameters->GridWorldPos[i]).c_str());
-    ImGui::Text(
-        "Scaled Img %zu: %s", i,
-        Utils::GlmVec2ToString(mCameraParameters->GridImagePos[i] * mImageSize)
-            .c_str());
-  }
-  ImGui::EndChild();
   ImGui::End();
 
   Logger::getInstance().ShowLogs();
+
+  recalculateGridPoints();
+  recalculate();
 }
 
 void CameraCalibrator::draw() {
@@ -279,8 +270,7 @@ void CameraCalibrator::draw() {
     const glm::vec2 &pos = mCameraParameters->RCImagePos[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
                               imagePos.y + pos.y * mImageSize.y);
-    ImU32 color = Colors::GetColorVector()[i + 2];
-    drawList->AddCircle(globalPos, mRadius, color, 30, 3);
+    drawList->AddCircle(globalPos, mRadius, mRCColors[i], 30, 3);
   }
   // Grid
   if (mCameraParameters->ShowGrid) {
@@ -300,7 +290,7 @@ void CameraCalibrator::draw() {
                              imagePos.y + start.y * mImageSize.y);
     ImVec2 endPos = ImVec2(imagePos.x + end.x * mImageSize.x,
                            imagePos.y + end.y * mImageSize.y);
-    ImU32 color = Colors::GetColorVector()[i];
+    ImU32 color = Colors::GetColorsImU32()[i];
     drawList->AddLine(startPos, endPos, color, 2.0f);
   }
   // Coordinate System Circles
@@ -308,13 +298,7 @@ void CameraCalibrator::draw() {
     const glm::vec2 &pos = mCameraParameters->CSImagePos[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
                               imagePos.y + pos.y * mImageSize.y);
-    ImU32 color;
-    if (i == 0) {
-      color = Colors::GetColorVector()[3];
-    } else {
-      color = Colors::GetColorVector()[i - 1];
-    }
-    drawList->AddCircle(globalPos, mRadius, color, 30, 3);
+    drawList->AddCircle(globalPos, mRadius / 2.0f, mCSColors[i], 30, 3);
   }
 }
 
@@ -354,7 +338,7 @@ void CameraCalibrator::drag() {
       glm::vec2 newPos =
           glm::vec2(mousePos.x - imagePos.x, mousePos.y - imagePos.y);
       pos = newPos / mImageSize;
-      mChanged = true;
+      mChanged = UPDATE_STEPS;
     } else {
       dragging = false;
     }
@@ -363,7 +347,7 @@ void CameraCalibrator::drag() {
 }
 
 void CameraCalibrator::recalculateGridPoints() {
-  if (!mChanged)
+  if (!mChanged || mCameraParameters == nullptr)
     return;
   glm::vec2 halfSize = mCameraParameters->RCWorldSize / 2.0f;
   mCameraParameters->GridWorldPos.clear();
@@ -379,7 +363,6 @@ void CameraCalibrator::recalculateGridPoints() {
       mCameraParameters->GridImagePos.push_back(glm::vec2(0));
     }
   }
-
   mCameraParameters->RCWorldPos[0] = glm::vec3(-halfSize.x, +halfSize.y, 0.0f);
   mCameraParameters->RCWorldPos[1] = glm::vec3(-halfSize.x, -halfSize.y, 0.0f);
   mCameraParameters->RCWorldPos[2] = glm::vec3(+halfSize.x, -halfSize.y, 0.0f);
@@ -387,9 +370,10 @@ void CameraCalibrator::recalculateGridPoints() {
 }
 
 void CameraCalibrator::recalculate() {
-  if (!mChanged || mLoadedImageFilename == "")
+  if (!mChanged || mLoadedImageFilename == "" || mCameraParameters == nullptr)
     return;
-  mChanged = false;
+
+  mChanged--;
 
   // Rescale coordinate system for visibility
   float csSize = (glm::min(mCameraParameters->RCWorldSize.x,
@@ -419,47 +403,57 @@ void CameraCalibrator::recalculate() {
 
 void CameraCalibrator::handleOpenImage() {
   const std::vector<std::string> &imageFilePaths = FileSystem::OpenFiles(
-      mFolderPath, "Image .jpg .jpeg .png", "*.jpg *.jpeg *.png");
+      *mActiveFolder, "Image .jpg .jpeg .png", "*.jpg *.jpeg *.png");
   for (const std::string &imageFilePath : imageFilePaths) {
     if (imageFilePath == "")
       continue;
 
-    if (imageFilePath != mLoadedImageFilename) {
-      mLoadedImageFilename = imageFilePath;
-      mTexture = mTextureManager.getTexture(imageFilePath);
-      mCameraParameters->RefImageFilePath =
-          FileSystem::GetFileNameFromPath(imageFilePath);
-      mChanged = true;
+    mCameraParametersManager.AddParameter(imageFilePath, false);
+    mCameraParameters = mCameraParametersManager.GetCameraParameter();
+    if (mCameraParameters != nullptr) {
+      onParamChange();
     }
-    mFolderPath = imageFilePath;
   }
 }
 
 void CameraCalibrator::handleOpenParams() {
   const std::vector<std::string> &paramFilePaths =
-      FileSystem::OpenFiles(mFolderPath, "Parameters .json", "*.json");
+      FileSystem::OpenFiles(*mActiveFolder, "Parameters .json", "*.json");
   for (const std::string &paramFilePath : paramFilePaths) {
     if (paramFilePath == "")
       continue;
 
-    mCameraParameters->Load(paramFilePath);
-    const std::string &refImageFilePath =
-        FileSystem::GetDirectoryFromPath(paramFilePath) + "/" +
-        mCameraParameters->RefImageFilePath;
-    if (refImageFilePath != mLoadedImageFilename) {
-      mLoadedImageFilename = refImageFilePath;
-      mTexture = mTextureManager.getTexture(refImageFilePath);
+    mCameraParametersManager.AddParameter(paramFilePath, true);
+    mCameraParameters = mCameraParametersManager.GetCameraParameter();
+    if (mCameraParameters != nullptr) {
+      onParamChange();
     }
-    mChanged = true;
-    mFolderPath = paramFilePath;
   }
 }
 
 void CameraCalibrator::saveParams() {
-  std::string fileName = FileSystem::GetFileNameFromPath(mLoadedImageFilename);
-  std::string saveFolder =
-      FileSystem::GetDirectoryFromPath(mLoadedImageFilename);
-  std::string saveName = FileSystem::RemoveFileExtension(fileName) + ".json";
-  std::string savePath = saveFolder + "/" + saveName;
-  mCameraParameters->Save(savePath);
+  if (mLoadedImageFilename == "")
+    return;
+  mCameraParameters->Save();
+}
+
+void CameraCalibrator::onParamChange() {
+  if (mCameraParameters == nullptr) {
+    Logger::getInstance().Debug("Params changed nullptr");
+    mTexture = nullptr;
+    mLoadedImageFilename = "";
+    return;
+  }
+  Logger::getInstance().Debug("Params changed " + mCameraParameters->Path);
+  // Calculate full texture path
+  // path/to/param.json -> path/to/param.png
+  const std::string &refImageFilePath =
+      FileSystem::GetDirectoryFromPath(mCameraParameters->Path) + "/" +
+      mCameraParameters->RefImageFilePath;
+  if (refImageFilePath != mLoadedImageFilename) {
+    mLoadedImageFilename = refImageFilePath;
+    mTexture = mTextureManager.getTexture(refImageFilePath);
+  }
+  mChanged = UPDATE_STEPS;
+  *mActiveFolder = mCameraParameters->Path;
 }

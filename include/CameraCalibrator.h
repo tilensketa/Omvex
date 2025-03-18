@@ -3,9 +3,8 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <memory>
-#include <vector>
 
-#include "CameraParameters.h"
+#include "CameraParametersManager.h"
 #include "TextureManager.h"
 
 class CameraCalibrator {
@@ -13,12 +12,16 @@ public:
   CameraCalibrator();
 
   void Update();
+  void SetActiveFolder(std::shared_ptr<std::string> &activeFolder) {
+    mActiveFolder = activeFolder;
+  }
 
 private:
   void draw();
   void move(int id);
   void drag();
 
+  // opencv need to go
   void recalculateGridPoints();
   glm::vec2 projectPoint3DTo2D(const glm::vec3 &point3D);
   void calculateRotationTranslation();
@@ -28,17 +31,25 @@ private:
   void handleOpenParams();
   void saveParams();
 
+  void onParamChange();
+
 private:
   char mRCImageDrag[4];
   float mRadius = 10.0f;
-  bool mChanged = true;
+  int mChanged = 5;
 
   TextureManager mTextureManager;
   std::shared_ptr<Texture> mTexture = nullptr;
   std::string mLoadedImageFilename = "";
   glm::vec2 mImageSize;
 
-  std::string mFolderPath = "";
+  std::shared_ptr<std::string> mActiveFolder = nullptr;
 
-  std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
+  std::shared_ptr<CameraParameters> mCameraParameters = nullptr;
+  CameraParametersManager mCameraParametersManager;
+
+  std::vector<ImU32> mCSColors = {Colors::YELLOW, Colors::RED, Colors::GREEN,
+                                  Colors::BLUE};
+  std::vector<ImU32> mRCColors = {Colors::BLUE, Colors::YELLOW, Colors::CYAN,
+                                  Colors::MAGENTA};
 };

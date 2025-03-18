@@ -5,8 +5,6 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-#include "Logger.h"
-
 struct CameraParameters {
   bool DimImage = true;
   bool ShowGrid = true;
@@ -31,10 +29,12 @@ struct CameraParameters {
   glm::ivec2 ImageCalibratedSize;
 
   std::string RefImageFilePath;
+  std::string Path;
+  bool Loaded;
 
   CameraParameters(const std::string &filePath);
 
-  void Save(const std::string &file);
+  void Save();
   void Load(const std::string &filePath);
 
   json ToJson();

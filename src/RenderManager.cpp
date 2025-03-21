@@ -1,5 +1,7 @@
 #include "RenderManager.h"
 #include "FileSystem.h"
+#include <iomanip>
+#include <sstream>
 
 #include <chrono>
 
@@ -45,8 +47,11 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
     return;
   }
   auto start = std::chrono::high_resolution_clock::now();
-  std::string path = mRenderFolder + "/" + std::to_string(mRenderId) + "_" +
-                     std::to_string(mRenderSubId) + ".png";
+  std::ostringstream oss;
+  oss << std::setfill('0') << std::setw(5) << mRenderId;
+  std::string title = oss.str();
+  std::string path =
+      mRenderFolder + "/" + title + "_" + std::to_string(mRenderSubId) + ".png";
   saveImage(frameBuffer, path);
   mRenderSubId++;
   if (mRenderSubId == 2) {

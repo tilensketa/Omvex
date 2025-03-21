@@ -11,6 +11,31 @@ namespace fs = std::filesystem;
 
 namespace FileSystem {
 
+inline std::string RemoveFileExtension(const std::string &filePath) {
+  // Use std::filesystem to manipulate the file path
+  std::filesystem::path path(filePath);
+  // Remove the extension and return the string
+  return path.stem().string();
+}
+
+inline std::string GetFileNameFromPath(const std::string &path) {
+  std::filesystem::path filePath(path);
+  return filePath.filename().string();
+}
+inline std::string GetDirectoryFromPath(const std::string &path) {
+  std::filesystem::path filePath(path);
+  return filePath.parent_path().string();
+}
+
+inline std::string FindExistingFolder(const std::vector<std::string> &paths) {
+  for (const auto &path : paths) {
+    if (std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
+      return path; // Return the first existing folder
+    }
+  }
+  return "";
+}
+
 // Select folder with start path and return it
 inline std::string SelectFolder(const std::string &path) {
   auto f = pfd::select_folder("Select folder", path);
@@ -58,9 +83,6 @@ OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
   if (path == "") {
     path = pfd::path::home();
   }
-#ifdef _WIN32
-  path = pfd::path::home();
-#endif
   auto f = pfd::open_file("Choose files to read", path, {name, exts},
                           pfd::opt::multiselect);
   std::vector<std::string> parsedPatterns = splitPatterns(exts);
@@ -69,7 +91,7 @@ OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
       if (matchesPattern(file, pattern)) {
         Logger::getInstance().Debug("Open file: " + file);
         filesToOpen.push_back(file);
-        path = file;
+        path = GetDirectoryFromPath(file);
       }
     }
   }
@@ -164,30 +186,6 @@ ShowFileDropdown(const std::string &folderPath,
     filePath = folderPath + "/" + files[currentFileIndex];
   }
   return filePath;
-}
-inline std::string RemoveFileExtension(const std::string &filePath) {
-  // Use std::filesystem to manipulate the file path
-  std::filesystem::path path(filePath);
-  // Remove the extension and return the string
-  return path.stem().string();
-}
-
-inline std::string GetFileNameFromPath(const std::string &path) {
-  std::filesystem::path filePath(path);
-  return filePath.filename().string();
-}
-inline std::string GetDirectoryFromPath(const std::string &path) {
-  std::filesystem::path filePath(path);
-  return filePath.parent_path().string();
-}
-
-inline std::string FindExistingFolder(const std::vector<std::string> &paths) {
-  for (const auto &path : paths) {
-    if (std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
-      return path; // Return the first existing folder
-    }
-  }
-  return "";
 }
 
 } // namespace FileSystem

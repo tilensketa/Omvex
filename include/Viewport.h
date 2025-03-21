@@ -77,7 +77,7 @@ private:
   std::vector<std::string> mResolutionNames = {"480p", "720p", "1080p", "1440p",
                                                "4K"};
   std::vector<int> mResolutionHeights = {480, 720, 1080, 1440, 2160};
-  int mCurrentResolution = 0;
+  int mCurrentResolution = 2;
   int mImageResolutionHeight = mResolutionHeights[mCurrentResolution];
 
   PhysicsManager mPhysicsManager;

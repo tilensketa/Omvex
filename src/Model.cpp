@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "Utils.h"
+#include "FileSystem.h"
 
 Model::Model(const std::string &path) {
   loadModel(path);
@@ -26,7 +27,7 @@ void Model::loadModel(const std::string &path) {
     return;
   }
 
-  mDirectory = path.substr(0, path.find_last_of('/'));
+  mDirectory = FileSystem::GetDirectoryFromPath(path);
   processNode(scene->mRootNode, scene);
   calculateBoundingBox();
 

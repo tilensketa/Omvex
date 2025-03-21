@@ -38,6 +38,7 @@ public:
   }
 
   void SetPosition(const glm::vec3 &position) { mPosition = position; }
+  void SetResolution(const glm::ivec2 &res) { mResolution = res; }
 
   void SetStatic(bool stati) { mStatic = stati; }
 

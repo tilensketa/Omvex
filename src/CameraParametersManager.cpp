@@ -33,7 +33,8 @@ void CameraParametersManager::AddParameter(const std::string &path,
       }
     }
   }
-  Logger::getInstance().Success("Camera parameters added: " + param->Path);
+  Logger::getInstance().Info(
+      "CameraParametersManager: Added camera parameters " + param->Path);
   mCameraParameters.push_back(param);
   mParameterNames.push_back(param->Path + " / " + param->RefImageFilePath);
   mSelectedParameterId = mCameraParameters.size() - 1;
@@ -51,7 +52,7 @@ void CameraParametersManager::Remove() {
   } else {
     mSelectedParameterId = -1;
   }
-  Logger::getInstance().Success("Removed camera parameter");
+  Logger::getInstance().Info("CameraParametersManager: Removed camera parameter");
   mChange = true;
 }
 

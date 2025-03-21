@@ -58,6 +58,9 @@ OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
   if (path == "") {
     path = pfd::path::home();
   }
+#ifdef _WIN32
+  path = pfd::path::home();
+#endif
   auto f = pfd::open_file("Choose files to read", path, {name, exts},
                           pfd::opt::multiselect);
   std::vector<std::string> parsedPatterns = splitPatterns(exts);
@@ -66,6 +69,7 @@ OpenFiles(std::string &path, const std::string &name, const std::string &exts) {
       if (matchesPattern(file, pattern)) {
         Logger::getInstance().Debug("Open file: " + file);
         filesToOpen.push_back(file);
+        path = file;
       }
     }
   }
@@ -92,7 +96,6 @@ CheckFileValidExtension(const std::string &filePath,
                         const std::vector<std::string> &validExtensions) {
   std::filesystem::path path(filePath);
   std::string extension = path.extension().string();
-  Logger::getInstance().Debug("File: " + filePath + ", Ext: " + extension);
   if (std::find(validExtensions.begin(), validExtensions.end(), extension) !=
       validExtensions.end()) {
     return true;

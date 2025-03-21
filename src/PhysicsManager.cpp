@@ -25,6 +25,7 @@ PhysicsManager::PhysicsManager() {
 void PhysicsManager::AddModel(std::shared_ptr<Model> &model) {
   glm::vec3 half = (model->GetMaxVert() - model->GetMinVert()) / 2.0f;
   AddCuboid(half);
+  Logger::getInstance().Info("PhysicsManager: Added body " + model->GetPath());
 }
 
 void PhysicsManager::AddCuboid(const glm::vec3 &halfSize) {
@@ -42,6 +43,7 @@ void PhysicsManager::AddCuboid(const glm::vec3 &halfSize) {
 void PhysicsManager::RemoveBody(int id) {
   if (id != -1) {
     mBodies.erase(mBodies.begin() + (id + 1));
+    Logger::getInstance().Info("PhysicsManager: Removed body ");
   }
 }
 
@@ -56,6 +58,7 @@ void PhysicsManager::addGroundPlane() {
       mPhysicsCommon->createBoxShape(halfExtents);
   reactphysics3d::Collider *collider;
   collider = body->addCollider(boxShape, reactphysics3d::Transform::identity());
+  Logger::getInstance().Info("PhysicsManager: Added ground plane");
 }
 void PhysicsManager::randomizeTransforms() {
   // Skip 0 -> ground plane

@@ -95,16 +95,28 @@ CameraCalibrator::CameraCalibrator() {
 
 void CameraCalibrator::Update() {
   if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("File")) {
+    if (ImGui::BeginMenu("Open")) {
       if (ImGui::MenuItem("Open Image")) {
         handleOpenImage();
       }
       if (ImGui::MenuItem("Open Params")) {
         handleOpenParams();
       }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Save")) {
       if (ImGui::MenuItem("Save Params")) {
         saveParams();
       }
+      if (ImGui::MenuItem("Save All Params")) {
+        for (std::shared_ptr<CameraParameters> param :
+             mCameraParametersManager.GetCameraParameters()) {
+          param->Save();
+        }
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Remove")) {
       if (ImGui::MenuItem("Remove")) {
         mCameraParametersManager.Remove();
       }
@@ -172,7 +184,10 @@ void CameraCalibrator::Update() {
     if (changeGrid)
       mCameraParametersManager.SetShowGrid(mCameraParameters->ShowGrid);
 
-    ImGui::Text("Worlds Rectangle Dimension:");
+    ImGui::Text("World Rectangle Dimension:");
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Set world dimensions of planar rectangle");
+    }
     ImVec4 red = Colors::ImU32ToImVec4(Colors::RED);
     ImVec4 green = Colors::ImU32ToImVec4(Colors::GREEN);
     bool changeRCSize0 = Utils::ImGuiHelpers::ColoredInputFloat(
@@ -182,6 +197,9 @@ void CameraCalibrator::Update() {
         "##Yd", &mCameraParameters->RCWorldSize[1], green);
 
     ImGui::Text("Number Of Grid Points:");
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Set how many grid points to display in each axis");
+    }
     bool changeGrid0 = Utils::ImGuiHelpers::ColoredDragInt(
         "##Xg", &mCameraParameters->NumGridPoints[0], red);
     ImGui::SameLine();
@@ -217,6 +235,7 @@ void CameraCalibrator::Update() {
   ImGui::End();
 
   ImGui::Begin("Debug");
+  ImGui::Text("Active Folder: %s", mActiveFolder->c_str());
   if (mTexture)
     ImGui::Text("OriginalImageSize: %f, %f", mTexture->GetSize().x,
                 mTexture->GetSize().y);
@@ -440,7 +459,6 @@ void CameraCalibrator::saveParams() {
 
 void CameraCalibrator::onParamChange() {
   if (mCameraParameters == nullptr) {
-    Logger::getInstance().Debug("Params changed nullptr");
     mTexture = nullptr;
     mLoadedImageFilename = "";
     return;
@@ -456,5 +474,4 @@ void CameraCalibrator::onParamChange() {
     mTexture = mTextureManager.getTexture(refImageFilePath);
   }
   mChanged = UPDATE_STEPS;
-  *mActiveFolder = mCameraParameters->Path;
 }

@@ -62,5 +62,5 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
   std::string msg = "Render time: " + std::to_string(elapsed.count());
-  Logger::getInstance().Debug(msg);
+  Logger::getInstance().Info(msg);
 }

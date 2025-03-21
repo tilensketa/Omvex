@@ -3,11 +3,13 @@
 #include "Colors.h"
 #include <chrono>
 #include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <imgui.h>
 #include <iomanip>
 #include <iostream>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -57,6 +59,8 @@ public:
         Logger::getInstance().GetLogs();
     ImGui::PushTextWrapPos(ImGui::GetWindowWidth());
     for (const auto &log : logs) {
+      if (log.first == LogLevel::DEBUG)
+        continue;
       ImU32 color = Colors::GetLogColorsImU32()[static_cast<int>(log.first)];
       ImGui::PushStyleColor(ImGuiCol_Text, color);
       ImGui::Text("%s", log.second.c_str());
@@ -75,6 +79,15 @@ private:
     enableANSIColors();
 #endif
 
+    std::filesystem::create_directory("logs");
+
+    // Create or open a log file in the 'logs' directory
+    std::string logFilePath = "logs/logfile_" + getTimestamp("%Y-%m-%d_%H-%M-%S") + ".txt";
+    logFile.open(logFilePath, std::ios::app);
+    if (!logFile.is_open()) {
+      Error("Failed to open log file");
+    }
+
   } // Private constructor to prevent instantiation
   std::vector<std::string> logs; // Store log messages
 
@@ -89,12 +102,15 @@ private:
         timeStamp + info.first + info.second + message + Colors::ANSI::RESET;
     std::cout << logMessageColor << std::endl;
     std::string logMessageNoColor = timeStamp + info.second + message;
+    if (logFile.is_open()) {
+      logFile << logMessageNoColor << std::endl;
+    }
     std::pair<LogLevel, std::string> log =
         std::make_pair(logLevel, logMessageNoColor);
     mLogs.push_back(log);
   }
 
-  inline std::string getTimestamp() {
+  inline std::string getTimestamp(const std::string& format = "%Y-%m-%d %H:%M:%S") {
     auto now = std::chrono::system_clock::now();
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
     std::tm tm_now;
@@ -106,7 +122,7 @@ private:
 #endif
 
     std::ostringstream timestamp;
-    timestamp << std::put_time(&tm_now, "%Y-%m-%d %H:%M:%S");
+    timestamp << std::put_time(&tm_now, format.c_str());
     return timestamp.str();
   }
 
@@ -146,4 +162,5 @@ private:
 
 private:
   std::vector<std::pair<LogLevel, std::string>> mLogs;
+  std::ofstream logFile;
 };

@@ -20,10 +20,12 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glCompileShader(vertexShader);
 
   // Check for compilation errors
-  GLint success;
+  GLint successVert;
+  GLint successFrag;
+  GLint successLink;
   GLchar infoLog[512];
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &successVert);
+  if (!successVert) {
     glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
     std::ostringstream errorMsg;
     errorMsg << "Vertex Shader Compilation Failed:\n" << infoLog;
@@ -36,8 +38,8 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glCompileShader(fragmentShader);
 
   // Check for compilation errors
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
+  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &successFrag);
+  if (!successFrag) {
     glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
     std::ostringstream errorMsg;
     errorMsg << "Fragment Shader Compilation Failed:\n" << infoLog;
@@ -51,17 +53,23 @@ Shader::Shader(const char *vertexShaderPath, const char *fragmentShaderPath) {
   glLinkProgram(mID);
 
   // Check for linking errors
-  glGetProgramiv(mID, GL_LINK_STATUS, &success);
-  if (!success) {
+  glGetProgramiv(mID, GL_LINK_STATUS, &successLink);
+  if (!successLink) {
     glGetProgramInfoLog(mID, 512, NULL, infoLog);
     std::ostringstream errorMsg;
     errorMsg << "Shader Program Linking Failed:\n" << infoLog;
     Logger::getInstance().Error(errorMsg.str());
   }
 
-  Logger::getInstance().Success(
-      "Shader compiled: " + std::string(vertexShaderPath) + ", " +
-      std::string(fragmentShaderPath));
+  if (successVert && successFrag && successLink) {
+    Logger::getInstance().Success(
+        "Shader compiled: " + std::string(vertexShaderPath) + ", " +
+        std::string(fragmentShaderPath));
+  } else {
+    Logger::getInstance().Error(
+        "Shader failed to compile: " + std::string(vertexShaderPath) + ", " +
+        std::string(fragmentShaderPath));
+  }
 
   // Delete the shaders as they're linked into our program now and no longer
   // needed

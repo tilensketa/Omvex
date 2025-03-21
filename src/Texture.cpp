@@ -62,7 +62,7 @@ GLuint Texture::loadTexture(const std::string &filePath) {
   if (!data) {
     Logger::getInstance().Error("Failed to load texture: " + filePath);
   } else {
-    Logger::getInstance().Success("Successfully loaded texture: " + filePath);
+    Logger::getInstance().Success("Loaded texture: " + filePath);
   }
 
   // Generate OpenGL texture
@@ -103,7 +103,7 @@ void Texture::Save(const std::string &path) {
   if (stbi_write_png(path.c_str(), mWidth, mHeight, 4, data, mWidth * 4)) {
     Logger::getInstance().Success("Texture saved to: " + path);
   } else {
-    Logger::getInstance().Error("Failed to save texture: " + path);
+    Logger::getInstance().Error("Failed to save texture to: " + path);
   }
 
   // Cleanup

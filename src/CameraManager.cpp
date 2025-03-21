@@ -21,10 +21,10 @@ std::shared_ptr<FBO> CameraManager::GetFBO() {
 void CameraManager::AddCamera(std::shared_ptr<Camera> camera) {
   mCameras.push_back(camera);
   std::string name = "Camera " + std::to_string(mCameraNames.size() + 1) + " " +
-                     camera->GetBgImage() + " (" +
-                     std::to_string(camera->GetResolution().x) + ", " +
-                     std::to_string(camera->GetResolution().y) + ")";
+                     camera->GetBgImage();
   mCameraNames.push_back(name);
+  mSelectedCameraId++;
+  Logger::getInstance().Success("Added camera: " + camera->GetBgImage());
 }
 
 bool CameraManager::HandleSwitching(GLFWwindow *window) {
@@ -69,14 +69,20 @@ void CameraManager::SwitchNext() {
 }
 
 bool CameraManager::Remove() {
-  if (mCameras.size() > 0 && mFrameBuffers.size() > 0) {
-    mCameras.erase(mCameras.begin() + mSelectedCameraId);
-    mFrameBuffers.erase(mFrameBuffers.begin() + mSelectedCameraId);
-    mCameraNames.erase(mCameraNames.begin() + mSelectedCameraId);
-    mSelectedCameraId = 0;
-    return true;
+  if (mCameras.size() == 0 || mFrameBuffers.size() == 0 ||
+      mSelectedCameraId == -1) {
+    return false;
   }
-  return false;
+  mCameras.erase(mCameras.begin() + mSelectedCameraId);
+  mFrameBuffers.erase(mFrameBuffers.begin() + mSelectedCameraId);
+  mCameraNames.erase(mCameraNames.begin() + mSelectedCameraId);
+  if (mCameras.size() > 0) {
+    mSelectedCameraId = 0;
+  } else {
+    mSelectedCameraId = -1;
+  }
+  Logger::getInstance().Success("Removed camera");
+  return true;
 }
 
 void CameraManager::ShowCameras() {

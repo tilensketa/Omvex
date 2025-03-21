@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "Utils.h"
+#include "Logger.h"
 
 Camera::Camera(int width, int height, glm::vec3 position) {
   mResolution = glm::ivec2(width, height);
@@ -83,6 +84,7 @@ void Camera::OnResize(const glm::vec2 &newResolution) {
 
 void Camera::SetParameters(const std::string &folderPath,
                            const CameraParameters &params) {
+  Logger::getInstance().Debug("Settings parameters " + folderPath);
   mParameters = std::make_unique<CameraParameters>(params);
   mStatic = true;
 

@@ -26,11 +26,14 @@ public:
 
   const int GetSelectedId() const { return mSelectedCameraId; }
 
+  std::vector<std::shared_ptr<FBO>> &GetFBOs() { return mFrameBuffers; }
+  std::vector<std::shared_ptr<Camera>> &GetCameras() { return mCameras; }
+
 private:
   std::vector<std::shared_ptr<Camera>> mCameras;
   std::vector<std::shared_ptr<FBO>> mFrameBuffers;
   std::vector<std::string> mCameraNames;
-  int mSelectedCameraId = 0;
+  int mSelectedCameraId = -1;
 
   float mCooldown = 0.25f;
   std::chrono::time_point<std::chrono::high_resolution_clock> mPrevPress;

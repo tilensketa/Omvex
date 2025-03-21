@@ -25,7 +25,6 @@ Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices,
   mVAO.Unbind();
   mVBO.Unbind();
   mEBO.Unbind();
-  Logger::getInstance().Success("Mesh created: " + name);
 }
 
 void Mesh::Draw(Shader &shader, Camera &camera, GLuint mode) const {

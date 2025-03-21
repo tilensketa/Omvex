@@ -11,22 +11,22 @@ void ModelManager::AddModel(std::shared_ptr<Model> model) {
   mModelNames.push_back(name);
   mModelSegmentedColors = Colors::GenerateSegmentedColors(mModels.size());
   mSelectedModelId = mModels.size() - 1;
+  Logger::getInstance().Info("ModelManager: Added model " + model->GetPath());
 }
 
 void ModelManager::Remove() {
   if (mSelectedModelId == -1) {
     return;
   }
+  mModels.erase(mModels.begin() + mSelectedModelId);
+  mModelNames.erase(mModelNames.begin() + mSelectedModelId);
   if (mModels.size() > 0) {
-    mModels.erase(mModels.begin() + mSelectedModelId);
-    mModelNames.erase(mModelNames.begin() + mSelectedModelId);
-    if (mModels.size() > 0) {
-      mSelectedModelId = 0;
-      mModelSegmentedColors = Colors::GenerateSegmentedColors(mModels.size());
-    } else {
-      mSelectedModelId = -1;
-    }
+    mSelectedModelId = 0;
+    mModelSegmentedColors = Colors::GenerateSegmentedColors(mModels.size());
+  } else {
+    mSelectedModelId = -1;
   }
+  Logger::getInstance().Info("ModelManager: Removed model");
 }
 
 void ModelManager::ShowModels() {

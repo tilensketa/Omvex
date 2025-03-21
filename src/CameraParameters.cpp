@@ -58,9 +58,9 @@ void CameraParameters::Save() {
   if (outFile.is_open()) {
     outFile << ToJson().dump(4);
     outFile.close();
-    Logger::getInstance().Success("Successfully saved file: " + Path);
+    Logger::getInstance().Success("CameraParameters: Successfully saved file: " + Path);
   } else {
-    Logger::getInstance().Error("Failed to open file for writing: " + Path);
+    Logger::getInstance().Error("CameraParameters: Failed to open file for writing: " + Path);
   }
 }
 void CameraParameters::Load(const std::string &filePath) {
@@ -72,7 +72,8 @@ void CameraParameters::Load(const std::string &filePath) {
     FromJson(j);
     Path = filePath;
     Loaded = true;
+    Logger::getInstance().Success("CameraParameters: Loaded parameters from: " + filePath);
   } else {
-    Logger::getInstance().Error("Failed to open file for reading: " + filePath);
+    Logger::getInstance().Error("CameraParameters: Failed to open file for reading: " + filePath);
   }
 }

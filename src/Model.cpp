@@ -1,8 +1,10 @@
 #include "Model.h"
 #include "Utils.h"
-#include <iostream>
 
-Model::Model(const std::string &path) { loadModel(path); }
+Model::Model(const std::string &path) {
+  loadModel(path);
+  Logger::getInstance().Success("Created model " + path);
+}
 
 void Model::Draw(Shader &shader, Camera &camera, GLuint mode) const {
   for (const auto &mesh : mMeshes) {
@@ -30,8 +32,10 @@ void Model::loadModel(const std::string &path) {
 
   Logger::getInstance().Debug("MODEL");
   Logger::getInstance().Debug("|-Model path: " + path);
-  Logger::getInstance().Debug("  |- Max: " + Utils::GlmToString::Vec3(mMaxVert));
-  Logger::getInstance().Debug("  |- Min: " + Utils::GlmToString::Vec3(mMinVert));
+  Logger::getInstance().Debug("  |- Max: " +
+                              Utils::GlmToString::Vec3(mMaxVert));
+  Logger::getInstance().Debug("  |- Min: " +
+                              Utils::GlmToString::Vec3(mMinVert));
   Logger::getInstance().Debug("|-Number of meshes: " +
                               std::to_string(mMeshes.size()));
   int i = 0;

@@ -12,7 +12,7 @@ public:
     // Check if the texture is already loaded
     auto it = mTextureMap.find(path);
     if (it != mTextureMap.end()) {
-      Logger::getInstance().Info("Texture already loaded: " + path);
+      Logger::getInstance().Debug("Texture already loaded: " + path);
       return mTextures[it->second];
     }
 

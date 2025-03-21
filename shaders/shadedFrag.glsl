@@ -10,6 +10,7 @@ in vec2 texCoords;
 
 uniform bool HasTexture;
 uniform bool IsShaded;
+uniform float RandomDim;
 uniform sampler2D tex1;
 
 vec3 lightPos = vec3(100,100,100);
@@ -34,5 +35,7 @@ void main()
   else{
     result *= fragColor;
   }
+
+  result = max(result * (1.0 - RandomDim), vec3(0));
   FragColor = vec4(result, 1.0f);
 }

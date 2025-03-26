@@ -1,6 +1,7 @@
 #include "CameraParametersManager.h"
 #include "FileSystem.h"
 #include "Logger.h"
+#include <imgui.h>
 
 // If isParam -> path = paramPath, else path = imagePath
 void CameraParametersManager::AddParameter(const std::string &path,

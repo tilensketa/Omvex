@@ -15,6 +15,7 @@ public:
   void SetCameraManager(CameraManager *cameraManager) {
     mCameraManager = cameraManager;
   }
+  void StopRendering();
 
   int &ModRenders() { return mRenders; }
 

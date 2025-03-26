@@ -1,5 +1,4 @@
 #include "CameraCalibrator.h"
-#include "Colors.h"
 #include "FileSystem.h"
 #include "Logger.h"
 #include "Utils.h"
@@ -89,36 +88,51 @@ glm::vec2 project(const glm::vec2 &A, const glm::vec2 &B) {
   return (glm::dot(A, B) / glm::length2(B)) * B;
 }
 
-CameraCalibrator::CameraCalibrator() {
+CameraCalibrator::CameraCalibrator(const std::string &baseFolder) {
+  mExampleFolderPath = baseFolder + "/example/";
   mCameraParameters = std::make_shared<CameraParameters>("");
 }
 
 void CameraCalibrator::Update() {
   if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("Open")) {
-      if (ImGui::MenuItem("Open Image")) {
-        handleOpenImage();
-      }
-      if (ImGui::MenuItem("Open Params")) {
-        handleOpenParams();
-      }
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Save")) {
-      if (ImGui::MenuItem("Save Params")) {
-        saveParams();
-      }
-      if (ImGui::MenuItem("Save All Params")) {
-        for (std::shared_ptr<CameraParameters> param :
-             mCameraParametersManager.GetCameraParameters()) {
-          param->Save();
+    if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::BeginMenu("Open")) {
+        if (ImGui::MenuItem("Open Image")) {
+          handleOpenImage();
         }
+        if (ImGui::MenuItem("Open Params")) {
+          handleOpenParams();
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Save")) {
+        if (ImGui::MenuItem("Save Params")) {
+          saveParams();
+        }
+        if (ImGui::MenuItem("Save All Params")) {
+          for (std::shared_ptr<CameraParameters> param :
+               mCameraParametersManager.GetCameraParameters()) {
+            param->Save();
+          }
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Remove")) {
+        if (ImGui::MenuItem("Remove")) {
+          mCameraParametersManager.Remove();
+        }
+        ImGui::EndMenu();
       }
       ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Remove")) {
-      if (ImGui::MenuItem("Remove")) {
-        mCameraParametersManager.Remove();
+    if (ImGui::BeginMenu("Help")) {
+      if (ImGui::MenuItem("Example")) {
+        std::string paramFilePath = mExampleFolderPath + "/backgrounds/18.json";
+        mCameraParametersManager.AddParameter(paramFilePath, true);
+        mCameraParameters = mCameraParametersManager.GetCameraParameter();
+        if (mCameraParameters != nullptr) {
+          onParamChange();
+        }
       }
       ImGui::EndMenu();
     }
@@ -147,7 +161,8 @@ void CameraCalibrator::Update() {
     drag();
     draw();
   } else {
-    ImGui::Text("You need to load image");
+    std::string text = "You need to load image or params";
+    Utils::ImGuiHelpers::CenterText(text);
   }
   ImGui::End();
 
@@ -471,7 +486,7 @@ void CameraCalibrator::onParamChange() {
       mCameraParameters->RefImageFilePath;
   if (refImageFilePath != mLoadedImageFilename) {
     mLoadedImageFilename = refImageFilePath;
-    mTexture = mTextureManager.getTexture(refImageFilePath);
+    mTexture = mTextureManager->getTexture(refImageFilePath);
   }
   mChanged = UPDATE_STEPS;
 }

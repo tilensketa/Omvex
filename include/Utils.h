@@ -247,6 +247,14 @@ inline void RenderPointsTable(const std::string &tableName,
   ImGui::Columns(1);
   ImGui::Separator();
 }
+inline void CenterText(const std::string &text) {
+  ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+  ImVec2 windowSize = ImGui::GetContentRegionAvail();
+  ImVec2 windowCenter = ImVec2(windowSize.x / 2 - textSize.x / 2,
+                               windowSize.y / 2 - textSize.y / 2);
+  ImGui::SetCursorPos(windowCenter);
+  ImGui::Text("%s", text.c_str());
+}
 
 } // namespace ImGuiHelpers
 } // namespace Utils

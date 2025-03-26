@@ -12,7 +12,7 @@
 class Model {
 public:
   Model(const std::string &path);
-  void Draw(Shader &shader, Camera &camera, GLuint mode) const;
+  void Draw(Shader &shader, Camera &camera, bool fill) const;
 
   const std::string &GetPath() { return mPath; }
   std::vector<Mesh> &GetMeshes() { return mMeshes; }

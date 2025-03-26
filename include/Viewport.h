@@ -25,16 +25,18 @@
 
 class Viewport {
 public:
-  Viewport();
+  Viewport(const std::string &baseFolder);
   void SetWindow(GLFWwindow *window) { mWindow = window; }
   void SetActiveFolder(std::shared_ptr<std::string> &activeFolder) {
     mActiveFolder = activeFolder;
+  }
+  void SetTextureManager(std::shared_ptr<TextureManager> &textureManager) {
+    mTextureManager = textureManager;
   }
 
   void Update(float ts);
 
 private:
-  void getRelativePaths();
   void renderSceneToFramebuffer();
   void handleOpenParams();
   void handleOpenModel();
@@ -46,27 +48,29 @@ private:
   void removeCamera();
   void switchCamFBO();
 
+  void loadExample();
+
 private:
   GLFWwindow *mWindow;
 
+  std::shared_ptr<std::string> mActiveFolder = nullptr;
   std::string mShaderFolderPath = "";
-  std::string mModelFolderPath = "";
+  std::string mExampleFolderPath = "";
 
   std::unique_ptr<Shader> mShadedShader;
   std::unique_ptr<Shader> mSegmentedShader;
   std::unique_ptr<Shader> mBgQuadShader;
 
   ModelManager mModelManager;
+  std::unique_ptr<Mesh> mSpawningPreviewMesh;
 
   CameraManager mCameraManager;
   std::shared_ptr<Camera> mCamera;
   std::shared_ptr<FBO> mFrameBuffer;
 
-  std::shared_ptr<std::string> mActiveFolder = nullptr;
-
   std::unique_ptr<CameraParameters> mCameraParameters = nullptr;
 
-  TextureManager mTextureManager;
+  std::shared_ptr<TextureManager> mTextureManager;
   std::shared_ptr<Texture> mBgTexture;
   std::unique_ptr<Quad> mBgQuad;
 

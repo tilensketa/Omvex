@@ -25,6 +25,8 @@ public:
 private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)>
   initWindow(unsigned int width, unsigned int height);
+  void setWindowIcon();
+  void findBaseFolder();
   void setupImGui();
   void imGuiSetTheme();
   void processInput();
@@ -37,19 +39,29 @@ private:
                                         int height);
   void initCallbacks();
 
+  void showTutorialWindow();
+
 private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> mWindow;
 
   Mode mMode = Mode::CameraCalibration;
-  CameraCalibrator mCameraCalibrator;
-  Viewport mViewport;
+  std::unique_ptr<CameraCalibrator> mCameraCalibrator;
+  std::unique_ptr<Viewport> mViewport;
 
   float mTimeStep;
   std::chrono::time_point<std::chrono::high_resolution_clock> mFrameStart,
       mFrameEnd;
 
+  std::string mBaseFolder;
   std::string mConfigsFolder;
   std::string mImGuiIniFilePath;
+
+  std::shared_ptr<TextureManager> mTextureManager;
+  std::shared_ptr<Texture> mCalibrationTutorialImage;
+  std::shared_ptr<Texture> mViewportTutorialImage;
+
   bool mIsLightTheme = false;
   std::shared_ptr<std::string> mActiveFolder;
+
+  bool mShowTutorial = false;
 };

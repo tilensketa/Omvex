@@ -70,6 +70,18 @@ FetchContent_Declare(
 FetchContent_GetProperties(assimp)
 if(NOT assimp_POPULATED)
   FetchContent_Populate(assimp)
+
+  # Disable all features except OBJ import
+  set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+  set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+  set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+
+  # Disable all importers except OBJ
+  set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE) # Disable all exporters
+  set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE) # Disable all importers
+  set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE) # Enable only OBJ importer
+
   add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR})
 endif()
 
@@ -175,6 +187,8 @@ set(SOURCES
     src/ModelManager.cpp
     src/Model.cpp
     src/CameraParametersManager.cpp
+    src/Logger.cpp
+    src/FileSystem.cpp
     # Add other source files here if any
 )
 

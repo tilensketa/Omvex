@@ -27,7 +27,18 @@ Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices,
   mEBO.Unbind();
 }
 
-void Mesh::Draw(Shader &shader, Camera &camera, GLuint mode) const {
+Mesh Mesh::CreateQuad(float halfSide) {
+  std::vector<Vertex> vertices = {{glm::vec3(halfSide, halfSide, 0)},
+                                  {glm::vec3(-halfSide, halfSide, 0)},
+                                  {glm::vec3(halfSide, -halfSide, 0)},
+                                  {glm::vec3(-halfSide, -halfSide, 0)}};
+
+  std::vector<GLuint> indices = {0, 1, 2, 1, 2, 3};
+  std::vector<std::string> textures = {};
+  return Mesh(vertices, indices, textures, "Quad");
+}
+
+void Mesh::Draw(Shader &shader, Camera &camera, bool fill) const {
   shader.Activate();
   mVAO.Bind();
 
@@ -43,7 +54,13 @@ void Mesh::Draw(Shader &shader, Camera &camera, GLuint mode) const {
   shader.SetVec3("camPos", camera.GetPosition());
   camera.Matrix(shader, "camMatrix");
 
-  glDrawElements(mode, mIndices.size(), GL_UNSIGNED_INT, 0);
+  if (fill)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  else
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+  glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   mVAO.Unbind();
 }

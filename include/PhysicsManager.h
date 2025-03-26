@@ -17,6 +17,10 @@ public:
   void SetSimulating(bool toggle) { mSimulating = toggle; }
   void SetSimulationFrame(int frame) { mSimulationFrame = frame; }
 
+  void SetSpawningSpace(float space) { mSpawningSpace = space; }
+  const float GetSpawningSpace() const { return mSpawningSpace; }
+  float &ModSpawningSpace() { return mSpawningSpace; }
+
   bool IsSimulating() { return mSimulating; }
 
   const int GetBodyCount() const { return mBodies.size(); }
@@ -35,4 +39,7 @@ private:
   bool mSimulating = false;
   int mSimulatingFrames = 1000;
   int mSimulationFrame = 0;
+  // Square +-
+  float mSpawningSpace = 8;
+  glm::vec2 mSpawningHeightMinMax = glm::vec2(30, 50);
 };

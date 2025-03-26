@@ -2,8 +2,12 @@
 #include "Random.h"
 #include "Utils.h"
 
-Viewport::Viewport() {
-  getRelativePaths();
+Viewport::Viewport(const std::string &baseFolder) {
+  mShaderFolderPath = baseFolder + "/shaders/";
+  mExampleFolderPath = baseFolder + "/example/";
+  Logger::getInstance().Debug("Shader path: " + mShaderFolderPath);
+  Logger::getInstance().Debug("Example path: " + mExampleFolderPath);
+
   mCameraParameters = std::make_unique<CameraParameters>("");
 
   mBgQuad = std::make_unique<Quad>();
@@ -17,6 +21,9 @@ Viewport::Viewport() {
 
   if (mBgTexture)
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
+
+  mSpawningPreviewMesh = std::make_unique<Mesh>(
+      Mesh::CreateQuad(mPhysicsManager.GetSpawningSpace()));
 
   mRenderManager.SetViewMode(&mViewMode);
   mRenderManager.SetCameraManager(&mCameraManager);
@@ -58,19 +65,28 @@ void Viewport::Update(float ts) {
       }
       ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Camera")) {
-      if (ImGui::MenuItem("Add")) {
-        handleOpenParams();
-      } else if (ImGui::MenuItem("Remove")) {
-        removeCamera();
+    if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::BeginMenu("Camera")) {
+        if (ImGui::MenuItem("Add")) {
+          handleOpenParams();
+        } else if (ImGui::MenuItem("Remove")) {
+          removeCamera();
+        }
+        ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("Model")) {
+        if (ImGui::MenuItem("Add")) {
+          handleOpenModel();
+        } else if (ImGui::MenuItem("Remove")) {
+          removeModel();
+        }
+        ImGui::EndMenu();
       }
       ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Model")) {
-      if (ImGui::MenuItem("Add")) {
-        handleOpenModel();
-      } else if (ImGui::MenuItem("Remove")) {
-        removeModel();
+    if (ImGui::BeginMenu("Help")) {
+      if (ImGui::MenuItem("Example")) {
+        loadExample();
       }
       ImGui::EndMenu();
     }
@@ -99,7 +115,8 @@ void Viewport::Update(float ts) {
   // ImGui window with the framebuffer
   ImGui::Begin("MainView");
   if (mFrameBuffer == nullptr) {
-    ImGui::Text("You need to add camera!");
+    std::string text = "You need to add camera!";
+    Utils::ImGuiHelpers::CenterText(text);
   } else {
     ImVec2 windowSize = ImGui::GetContentRegionAvail();
     float aspectRatio = mCamera->GetAspectRatio();
@@ -125,6 +142,7 @@ void Viewport::Update(float ts) {
   ImGui::Text("VIEWPORT");
 
   ImGui::Text("View Mode:");
+  ImGui::SameLine();
   if (ImGui::RadioButton("Flat", mViewMode == ViewMode::Flat)) {
     mViewMode = ViewMode::Flat;
   }
@@ -147,18 +165,6 @@ void Viewport::Update(float ts) {
   }
 
   mModelManager.ShowModels();
-  if (ImGui::Button("Add Multimeter")) {
-    addModel(mModelFolderPath + "Multimeter/multimeter.obj");
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Add Power Dist")) {
-    addModel(mModelFolderPath + "Power_distributor/power_distributor.obj");
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Add Sliding Scale")) {
-    addModel(mModelFolderPath + "Sliding_scale/sliding_scale.obj");
-  }
-
   if (ImGui::Button("Add Model")) {
     handleOpenModel();
   }
@@ -166,11 +172,16 @@ void Viewport::Update(float ts) {
   if (ImGui::Button("Remove Model")) {
     removeModel();
   }
-
-  ImGui::SliderFloat("MaxDim", &mMaxDim, 0.0f, 1.0f);
+  ImGui::Separator();
+  ImGui::Text("Simulation");
+  if (ImGui::SliderFloat("SpawningArea", &mPhysicsManager.ModSpawningSpace(),
+                         0.0f, 100.0f)) {
+    mSpawningPreviewMesh = std::make_unique<Mesh>(
+        Mesh::CreateQuad(mPhysicsManager.GetSpawningSpace()));
+  }
   if (ImGui::IsItemHovered()) {
-    ImGui::SetTooltip("This slider controls the maximum dimming effect on the "
-                      "image. Higher values make the image darker.");
+    ImGui::SetTooltip(
+        "This slider controls spawning area half length (yellow quad).");
   }
 
   if (ImGui::Button("Simulate")) {
@@ -187,6 +198,13 @@ void Viewport::Update(float ts) {
     ImGui::Text("You need to have a model in the scene");
     ImGui::EndPopup();
   }
+  ImGui::Separator();
+  ImGui::Text("Renderer");
+  ImGui::SliderFloat("MaxDim", &mMaxDim, 0.0f, 1.0f);
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("This slider controls the maximum dimming effect on the "
+                      "image. Higher values make the image darker.");
+  }
   ImGui::InputInt("Renders", &mRenderManager.ModRenders());
   if (ImGui::IsItemHovered()) {
     ImGui::SetTooltip("This input sets number of images to be rendered");
@@ -198,7 +216,12 @@ void Viewport::Update(float ts) {
       }
     } else {
       mRenderManager.UpdateRenderClick(*mActiveFolder);
-      Logger::getInstance().Info("Start Rendering");
+    }
+  }
+  if (mRenderManager.IsRendering()) {
+    ImGui::SameLine();
+    if (ImGui::Button("Stop Rendering")) {
+      mRenderManager.StopRendering();
     }
   }
   if (ImGui::BeginPopup("ErrorRender")) {
@@ -272,6 +295,11 @@ void Viewport::renderSceneToFramebuffer() {
       glEnable(GL_DEPTH_TEST);
     }
   }
+  if (!mRenderManager.IsRendering() && mViewMode != ViewMode::Segmented) {
+    mSegmentedShader->Activate();
+    mSegmentedShader->SetVec3("uniqueColor", glm::vec3(1, 1, 0));
+    mSpawningPreviewMesh->Draw(*mSegmentedShader, *mCamera, false);
+  }
 
   for (size_t i = 0; i < mModelManager.GetCount(); i++) {
     std::shared_ptr<Model> &model = mModelManager.GetModels()[i];
@@ -280,17 +308,17 @@ void Viewport::renderSceneToFramebuffer() {
         mShadedShader->Activate();
         mShadedShader->SetBool("IsShaded", false);
         mShadedShader->SetFloat("RandomDim", mDim);
-        mesh.Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
+        mesh.Draw(*mShadedShader, *mCamera, true);
       } else if (mViewMode == ViewMode::Shaded) {
         mShadedShader->Activate();
         mShadedShader->SetBool("IsShaded", true);
         mShadedShader->SetFloat("RandomDim", mDim);
-        mesh.Draw(*mShadedShader, *mCamera, GL_TRIANGLES);
+        mesh.Draw(*mShadedShader, *mCamera, true);
       } else if (mViewMode == ViewMode::Segmented) {
         mSegmentedShader->Activate();
         glm::vec3 &uniqueColor = mModelManager.GetSegmentedColors()[i];
         mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
-        mesh.Draw(*mSegmentedShader, *mCamera, GL_TRIANGLES);
+        mesh.Draw(*mSegmentedShader, *mCamera, true);
       }
     }
   }
@@ -318,7 +346,7 @@ void Viewport::addCamera(const std::string &path) {
   mCameraManager.AddCamera(mCamera);
   std::string texturePath =
       folderPath + "/" + mCameraParameters->RefImageFilePath;
-  mBgTexture = mTextureManager.getTexture(texturePath);
+  mBgTexture = mTextureManager->getTexture(texturePath);
   mBgQuad->SetTexture(mBgTexture->GetTextureID());
   mFrameBuffer = std::make_shared<FBO>(width, mImageResolutionHeight);
   mCameraManager.AddFBO(mFrameBuffer);
@@ -336,7 +364,7 @@ void Viewport::switchCamFBO() {
     return;
   }
   if (mCamera->GetBgImage() != "") {
-    mBgTexture = mTextureManager.getTexture(mCamera->GetBgImage());
+    mBgTexture = mTextureManager->getTexture(mCamera->GetBgImage());
     mBgQuad->SetTexture(mBgTexture->GetTextureID());
     mFrameBuffer = mCameraManager.GetFBO();
     Logger::getInstance().Debug("Switch to camera " +
@@ -365,15 +393,28 @@ void Viewport::removeModel() {
   mModelManager.Remove();
 }
 
-// Get relative paths for shaders and models folders
-void Viewport::getRelativePaths() {
-  std::vector<std::string> possibleShaderPaths = {"../shaders/",
-                                                  "../../shaders/"};
-  std::vector<std::string> possibleModelPaths = {"../models/", "../../models/"};
-  mShaderFolderPath = FileSystem::FindExistingFolder(possibleShaderPaths);
-  mModelFolderPath = FileSystem::FindExistingFolder(possibleModelPaths);
-  if (mShaderFolderPath == "")
-    Logger::getInstance().Fatal("Shader folder not found!");
-  if (mModelFolderPath == "")
-    Logger::getInstance().Fatal("Models folder not found!");
+void Viewport::loadExample() {
+  for (size_t i = 1; i < 29; i++) {
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(2) << i;
+    std::string filename = oss.str();
+    std::string cameraPath =
+        mExampleFolderPath + "backgrounds/" + filename + ".json";
+    addCamera(cameraPath);
+  }
+  std::vector<std::string> modelFiles = {
+      "Deodorant/deodorant.obj",
+      "Hammer/hammer.obj",
+      "Light/light.obj",
+      "Meter5m/meter5m.obj",
+      "Multimeter/multimeter.obj",
+      "Power_distributor/power_distributor.obj",
+      "Rubiks_cube/rubiks_cube.obj",
+      "Sliding_scale/sliding_scale.obj",
+      "Uhu/uhu.obj",
+      "Wrench/wrench.obj"};
+  for (const std::string &modelFile : modelFiles) {
+    std::string modelPath = mExampleFolderPath + "models/" + modelFile;
+    addModel(modelPath);
+  }
 }

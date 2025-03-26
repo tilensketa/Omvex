@@ -22,6 +22,11 @@ inline float Float(float min, float max) {
   return dist(gen);
 }
 
+// Generate a random glm::vec2 with each component between min and max
+inline glm::vec2 Vec2(float min, float max) {
+  return glm::vec2(Float(min, max), Float(min, max));
+}
+
 // Generate a random glm::vec3 with each component between min and max
 inline glm::vec3 Vec3(float min, float max) {
   return glm::vec3(Float(min, max), Float(min, max), Float(min, max));

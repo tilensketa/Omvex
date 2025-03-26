@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 class TextureManager {
 public:
@@ -17,7 +18,7 @@ public:
     }
 
     // Load the texture if not already loaded
-    Logger::getInstance().Info("Loading and caching new texture: " + path);
+    Logger::getInstance().Debug("Loading and caching new texture: " + path);
     auto texture = std::make_shared<Texture>(path);
     mTextures.push_back(texture);
     mTextureMap[path] = mTextures.size() - 1;

@@ -53,7 +53,7 @@ void PhysicsManager::addGroundPlane() {
   body->setType(reactphysics3d::BodyType::STATIC);
   mBodies.push_back(body);
   // Collider
-  const reactphysics3d::Vector3 halfExtents(124, 124, 1);
+  const reactphysics3d::Vector3 halfExtents(1000, 1000, 1);
   reactphysics3d::BoxShape *boxShape =
       mPhysicsCommon->createBoxShape(halfExtents);
   reactphysics3d::Collider *collider;
@@ -64,8 +64,8 @@ void PhysicsManager::randomizeTransforms() {
   // Skip 0 -> ground plane
   for (size_t i = 1; i < mBodies.size(); i++) {
     reactphysics3d::Body *body = mBodies[i];
-    glm::vec3 rndPos = Random::Vec3(-30.0f, 30.0f);
-    float z = Random::Float(30, 50);
+    glm::vec2 rndPos = Random::Vec2(-mSpawningSpace, mSpawningSpace);
+    float z = Random::Float(mSpawningHeightMinMax.x, mSpawningHeightMinMax.y);
     reactphysics3d::Vector3 position =
         reactphysics3d::Vector3(rndPos.x, rndPos.y, z);
     reactphysics3d::Quaternion orientation = Random::RandomQuaternion();

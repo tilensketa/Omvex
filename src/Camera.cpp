@@ -84,7 +84,7 @@ void Camera::OnResize(const glm::vec2 &newResolution) {
 
 void Camera::SetParameters(const std::string &folderPath,
                            const CameraParameters &params) {
-  Logger::getInstance().Debug("Settings parameters " + folderPath);
+  Logger::getInstance().Debug("Camera set parameters " + folderPath);
   mParameters = std::make_unique<CameraParameters>(params);
   mStatic = true;
 

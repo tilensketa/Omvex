@@ -94,13 +94,13 @@ Download Precompiled Binaries
 ### Application Preview
 Camera calibration (dark, light theme)
 <p align="center">
-  <img src="resources/screenshots/camera_calibration_dark_18032025.png" width="49%">
-  <img src="resources/screenshots/camera_calibration_light_18032025.png" width="49%">
+  <img src="resources/screenshots/camera_calibration_dark_26032025.png" width="49%">
+  <img src="resources/screenshots/camera_calibration_light_26032025.png" width="49%">
 </p>
 Viewport (shaded, segmented)
 <p align="center">
-  <img src="resources/screenshots/viewport_shaded_18032025.png" width="49%">
-  <img src="resources/screenshots/viewport_segmented_18032025.png" width="49%">
+  <img src="resources/screenshots/viewport_shaded_26032025.png" width="49%">
+  <img src="resources/screenshots/viewport_segmented_26032025.png" width="49%">
 </p>
 
 ## Author

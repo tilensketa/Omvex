@@ -10,14 +10,26 @@
 #include <cassert>
 #include <memory>
 
+#include <stb_image.h>
+
 Application::Application() : mWindow(initWindow(1000, 1000)) {
   mTimeStep = 0.0f;
+  findBaseFolder();
+  setWindowIcon();
+
   initCallbacks();
   setupImGui();
-  mViewport.SetWindow(mWindow.get());
+
+  mTextureManager = std::make_shared<TextureManager>();
+
+  mViewport = std::make_unique<Viewport>(mBaseFolder);
+  mCameraCalibrator = std::make_unique<CameraCalibrator>(mBaseFolder);
+  mViewport->SetWindow(mWindow.get());
   mActiveFolder = std::make_shared<std::string>("");
-  mCameraCalibrator.SetActiveFolder(mActiveFolder);
-  mViewport.SetActiveFolder(mActiveFolder);
+  mCameraCalibrator->SetActiveFolder(mActiveFolder);
+  mViewport->SetActiveFolder(mActiveFolder);
+  mViewport->SetTextureManager(mTextureManager);
+  mCameraCalibrator->SetTextureManager(mTextureManager);
 }
 
 Application::~Application() {
@@ -28,18 +40,26 @@ Application::~Application() {
   glfwTerminate();
 }
 
+void Application::setWindowIcon() {
+  GLFWimage icon;
+  std::string icon_path = mBaseFolder + "/resources/OMVEX_icon.png";
+  icon.pixels = stbi_load(icon_path.c_str(), &icon.width, &icon.height, 0, 4);
+
+  if (icon.pixels) {
+    glfwSetWindowIcon(mWindow.get(), 1, &icon);
+    stbi_image_free(icon.pixels);
+    Logger::getInstance().Info("Loaded icon: " + icon_path);
+  } else {
+    Logger::getInstance().Error("Failed to load icon!");
+  }
+}
+
 void Application::setupImGui() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   // (void)io;
-  std::vector<std::string> possibleConfigsPaths = {"../configs/",
-                                                   "../../configs/"};
-  mConfigsFolder = FileSystem::FindExistingFolder(possibleConfigsPaths);
-  if (mConfigsFolder == "") {
-    Logger::getInstance().Fatal("Config folder not found!");
-  }
   mImGuiIniFilePath = mConfigsFolder + "imgui.ini";
   io.IniFilename = mImGuiIniFilePath.c_str();
   Logger::getInstance().Debug("imgui.ini file path: " + mImGuiIniFilePath);
@@ -184,9 +204,11 @@ void Application::renderDockingSpaceWithMenuBar() {
     if (ImGui::BeginMenu("Mode")) {
       if (ImGui::MenuItem("CameraCalibration")) {
         mMode = Mode::CameraCalibration;
+        Logger::getInstance().Debug("Changed mode to CameraCalibration");
       }
       if (ImGui::MenuItem("Viewport")) {
         mMode = Mode::Viewport3d;
+        Logger::getInstance().Debug("Changed mode to Viewport");
       }
       ImGui::EndMenu();
     }
@@ -194,6 +216,23 @@ void Application::renderDockingSpaceWithMenuBar() {
       if (ImGui::MenuItem("Light Theme", nullptr, mIsLightTheme)) {
         mIsLightTheme = !mIsLightTheme;
         imGuiSetTheme();
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Edit")) {
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Help")) {
+      if (ImGui::MenuItem("Tutorial")) {
+        std::string calibrationImagePath =
+            mBaseFolder +
+            "/resources/screenshots/camera_calibration_dark_26032025.png";
+        mCalibrationTutorialImage =
+            mTextureManager->getTexture(calibrationImagePath);
+        std::string viewportImagePath =
+            mBaseFolder + "/resources/screenshots/viewport_shaded_26032025.png";
+        mViewportTutorialImage = mTextureManager->getTexture(viewportImagePath);
+        mShowTutorial = true;
       }
       ImGui::EndMenu();
     }
@@ -243,12 +282,16 @@ void Application::Run() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    if (mShowTutorial) {
+      showTutorialWindow();
+    }
+
     ts = 1.0f / ImGui::GetIO().Framerate;
     renderDockingSpaceWithMenuBar();
     if (mMode == Mode::CameraCalibration)
-      mCameraCalibrator.Update();
+      mCameraCalibrator->Update();
     else if (mMode == Mode::Viewport3d)
-      mViewport.Update(ts);
+      mViewport->Update(ts);
 
     // Rendering
     ImGui::Render();
@@ -324,4 +367,93 @@ void Application::framebuffer_size_callback(GLFWwindow *window, int width,
                        std::to_string(height);
     Logger::getInstance().Info(info);
   }
+}
+
+void Application::showTutorialWindow() {
+  ImGui::Begin("Tutorial", &mShowTutorial);
+
+  ImGui::PushTextWrapPos(ImGui::GetWindowContentRegionMax().x);
+
+  ImGui::Text("Welcome to the tutorial!");
+  ImGui::Separator();
+
+  ImGui::TextWrapped("Omvex is program that generates synthetic images. You "
+                     "need to have backgrounds and 3d models.");
+  ImGui::Separator();
+
+  ImGui::TextWrapped(
+      "Omvex has two modes. First one is CameraCalibration, second is "
+      "Viewport. You can switch between them in the menubar [Mode].");
+  ImGui::TextWrapped(
+      "Firstly, we want to configure the camera and get parameters. Switch "
+      "mode to [CameraCalibration] if it isn't already.");
+
+  ImGui::Separator();
+  ImGui::TextWrapped("CAMERA CALIBRATION");
+  ImGui::TextWrapped("In the right window, you see loaded backgrounds. You "
+                     "can add a background with [Open image] or add "
+                     "preconfigured parameters with [Open params].");
+
+  ImGui::TextWrapped(
+      "Once you add a background, a few options will appear. On the main view, "
+      "you need to set a planar surface (rectangle) that matches the 3D view. "
+      "On the right window, you then set the dimensions of the planar surface "
+      "along the x and y axes (units [cm]). You can also view and set grid "
+      "points along both "
+      "axes. Once you are happy with the configuration, you can save the "
+      "parameters. Parameters will be saved in the same folder as the "
+      "background image with the same name but a .json extension. You can "
+      "configure multiple backgrounds and save them all.");
+
+  ImVec2 windowSize = ImGui::GetContentRegionAvail();
+  glm::vec2 textureSize = mCalibrationTutorialImage->GetSize();
+  float aspectRatio = textureSize.x / textureSize.y;
+  float newWidth = windowSize.x;
+  float newHeight = windowSize.x / aspectRatio;
+  mCalibrationTutorialImage->Bind();
+  ImGui::Image((ImTextureID)(intptr_t)mCalibrationTutorialImage->GetTextureID(),
+               ImVec2(newWidth, newHeight));
+  mCalibrationTutorialImage->Unbind();
+
+  ImGui::TextWrapped("Now that you have the cameras calibrated, you can switch "
+                     "to [Viewport] mode.");
+
+  ImGui::Separator();
+  ImGui::TextWrapped("VIEWPORT");
+  ImGui::TextWrapped(
+      "On the right, you can load cameras that you configured (.json) and also "
+      "3D models (.obj). Now that you have all cameras and models in the "
+      "scene, you need "
+      "to set a couple of options. First is the dimming effect on cameras, and "
+      "second is the spawning area where models will be placed. You can also "
+      "change the resolution in the menubar [Settings] -> [Resolution] and "
+      "test simulation of models with button [Simulate]. Then "
+      "you set the number of images you want to render, click [Render], and "
+      "select a folder.");
+
+  textureSize = mViewportTutorialImage->GetSize();
+  aspectRatio = textureSize.x / textureSize.y;
+  newWidth = windowSize.x;
+  newHeight = windowSize.x / aspectRatio;
+  mCalibrationTutorialImage->Bind();
+  ImGui::Image((ImTextureID)(intptr_t)mViewportTutorialImage->GetTextureID(),
+               ImVec2(newWidth, newHeight));
+  mCalibrationTutorialImage->Unbind();
+
+  ImGui::Separator();
+  ImGui::PopTextWrapPos();
+  ImGui::End();
+}
+
+void Application::findBaseFolder() {
+  std::vector<std::string> possibleConfigsPaths = {"../configs/",
+                                                   "../../configs/"};
+  mConfigsFolder = FileSystem::FindExistingFolder(possibleConfigsPaths);
+  if (mConfigsFolder == "") {
+    Logger::getInstance().Fatal("Base Folder Not Found");
+  }
+  mBaseFolder = FileSystem::GetDirectoryFromPath(
+      FileSystem::GetDirectoryFromPath(mConfigsFolder));
+  Logger::getInstance().Debug("Base Folder: " + mBaseFolder);
+  Logger::getInstance().Debug("Config Folder: " + mConfigsFolder);
 }

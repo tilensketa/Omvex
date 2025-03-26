@@ -21,12 +21,21 @@ void RenderManager::Update(std::shared_ptr<FBO> frameBuffer, bool canRender) {
 }
 
 void RenderManager::UpdateRenderClick(const std::string &folderPath) {
-  if (mRenderId == 0) {
-    mRenderFolder = FileSystem::SelectFolder(folderPath);
-    if (mRenderFolder != "") {
-      mRendering = true;
-    }
+  mRenderFolder = FileSystem::SelectFolder(folderPath);
+  if (mRenderFolder != "") {
+    mRendering = true;
+    FileSystem::CreateDirectory(mRenderFolder + "/segmented");
+    FileSystem::CreateDirectory(mRenderFolder + "/shaded");
+    Logger::getInstance().Info("Start Rendering");
   }
+}
+
+void RenderManager::StopRendering() {
+  Logger::getInstance().Info("Rendering Stopped");
+  mRendering = false;
+  mRenderSetup = false;
+  mRenderId = 0;
+  mRenderSubId = 0;
 }
 
 void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
@@ -36,22 +45,22 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
   if (!mRenderSetup) {
     *mViewMode = ViewMode::Shaded;
     mRenderSetup = true;
-    mRenderId = 0;
-    mRenderSubId = 0;
     return;
   }
   if (mRenderId >= mRenders) {
-    mRendering = false;
-    mRenderSetup = false;
-    mRenderId = 0;
+    StopRendering();
     return;
   }
   auto start = std::chrono::high_resolution_clock::now();
   std::ostringstream oss;
   oss << std::setfill('0') << std::setw(5) << mRenderId;
   std::string title = oss.str();
-  std::string path =
-      mRenderFolder + "/" + title + "_" + std::to_string(mRenderSubId) + ".png";
+  std::string subFolder = "segmented/";
+  if (mRenderSubId == 0) {
+    subFolder = "shaded/";
+  }
+  std::string path = mRenderFolder + "/" + subFolder + title + "_" +
+                     std::to_string(mRenderSubId) + ".png";
   saveImage(frameBuffer, path);
   mRenderSubId++;
   if (mRenderSubId == 2) {

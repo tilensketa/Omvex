@@ -11,8 +11,9 @@ class Mesh {
 public:
   Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices,
        std::vector<std::string> &textures, std::string name = "");
+  static Mesh CreateQuad(float halfSide);
 
-  void Draw(Shader &shader, Camera &camera, GLuint mode) const;
+  void Draw(Shader &shader, Camera &camera, bool fill) const;
 
   void SetTransform(const glm::mat4 &mat);
 

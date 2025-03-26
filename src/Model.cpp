@@ -1,15 +1,15 @@
 #include "Model.h"
-#include "Utils.h"
 #include "FileSystem.h"
+#include "Utils.h"
 
 Model::Model(const std::string &path) {
   loadModel(path);
   Logger::getInstance().Success("Created model " + path);
 }
 
-void Model::Draw(Shader &shader, Camera &camera, GLuint mode) const {
+void Model::Draw(Shader &shader, Camera &camera, bool fill) const {
   for (const auto &mesh : mMeshes) {
-    mesh.Draw(shader, camera, mode);
+    mesh.Draw(shader, camera, fill);
   }
 }
 

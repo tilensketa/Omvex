@@ -5,15 +5,19 @@
 #include <memory>
 
 #include "CameraParametersManager.h"
+#include "Colors.h"
 #include "TextureManager.h"
 
 class CameraCalibrator {
 public:
-  CameraCalibrator();
+  CameraCalibrator(const std::string& baseFolder);
 
   void Update();
   void SetActiveFolder(std::shared_ptr<std::string> &activeFolder) {
     mActiveFolder = activeFolder;
+  }
+  void SetTextureManager(std::shared_ptr<TextureManager> &textureManager) {
+    mTextureManager = textureManager;
   }
 
 private:
@@ -38,12 +42,13 @@ private:
   float mRadius = 10.0f;
   int mChanged = 5;
 
-  TextureManager mTextureManager;
+  std::shared_ptr<TextureManager> mTextureManager;
   std::shared_ptr<Texture> mTexture = nullptr;
   std::string mLoadedImageFilename = "";
   glm::vec2 mImageSize;
 
   std::shared_ptr<std::string> mActiveFolder = nullptr;
+  std::string mExampleFolderPath = "";
 
   std::shared_ptr<CameraParameters> mCameraParameters = nullptr;
   CameraParametersManager mCameraParametersManager;

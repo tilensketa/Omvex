@@ -54,7 +54,7 @@ Logger::Logger() {
   enableANSIColors();
 #endif
 
-  FileSystem::CreateDirectory("logs");
+  FileSystem::CreateDir("logs");
 
   // Create or open a log file in the 'logs' directory
   std::string logFilePath =

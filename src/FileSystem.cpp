@@ -34,7 +34,7 @@ std::string FindExistingFolder(const std::vector<std::string> paths) {
   }
   return "";
 }
-void CreateDirectory(const std::string &directoryPath) {
+void CreateDir(const std::string &directoryPath) {
   std::filesystem::create_directory(directoryPath);
 }
 

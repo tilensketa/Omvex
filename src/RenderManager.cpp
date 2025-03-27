@@ -24,8 +24,8 @@ void RenderManager::UpdateRenderClick(const std::string &folderPath) {
   mRenderFolder = FileSystem::SelectFolder(folderPath);
   if (mRenderFolder != "") {
     mRendering = true;
-    FileSystem::CreateDirectory(mRenderFolder + "/segmented");
-    FileSystem::CreateDirectory(mRenderFolder + "/shaded");
+    FileSystem::CreateDir(mRenderFolder + "/segmented");
+    FileSystem::CreateDir(mRenderFolder + "/shaded");
     Logger::getInstance().Info("Start Rendering");
   }
 }
@@ -59,8 +59,7 @@ void RenderManager::render(std::shared_ptr<FBO> frameBuffer) {
   if (mRenderSubId == 0) {
     subFolder = "shaded/";
   }
-  std::string path = mRenderFolder + "/" + subFolder + title + "_" +
-                     std::to_string(mRenderSubId) + ".png";
+  std::string path = mRenderFolder + "/" + subFolder + title + ".png";
   saveImage(frameBuffer, path);
   mRenderSubId++;
   if (mRenderSubId == 2) {

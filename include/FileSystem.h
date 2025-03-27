@@ -14,7 +14,7 @@ std::string GetFileNameFromPath(const std::string &path);
 std::string GetDirectoryFromPath(const std::string &path);
 
 std::string FindExistingFolder(const std::vector<std::string> paths);
-void CreateDirectory(const std::string &directoryPath);
+void CreateDir(const std::string &directoryPath);
 std::vector<std::string> OpenFiles(std::string &path, const std::string &name,
                                    const std::string &exts);
 std::string SelectFolder(const std::string &path);

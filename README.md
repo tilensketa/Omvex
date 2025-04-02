@@ -40,27 +40,9 @@ This project relies on the following libraries:
 ## Installation & Setup
 ### Prerequisites
 Ensure you have the following installed:
-- CMake (3.10 or higher)
+- CMake (3.11 or higher)
 - A C++ compiler with C++17 support
 - OpenGL drivers
-- OpenCV system wide
-- Python
-
-### OpenCV Installation
-
-#### Linux (Ubuntu/Debian)
-Users can install OpenCV using their package manager:  
-```sh
-sudo apt update && sudo apt install libopencv-dev
-```
-
-#### Windows
-Download Precompiled Binaries
-1. Download OpenCV for **[Windows](https://opencv.org/releases/)**.
-2. Extract the files (e.g., to C:\opencv).
-3. Set environment variables:
-    - Add C:\opencv\build\x64\vc16\bin to your PATH.
-
 
 ## Building the Project
 1. Clone the repository:
@@ -68,9 +50,14 @@ Download Precompiled Binaries
    git clone https://github.com/tilensketa/Omvex.git
    cd Omvex
    ```
-2. Run `configure_build.py` to build and follow steps:
+2. Build:
+    - Linux (Ubuntu/Debian)
    ```sh
-   python configure_build.py
+   ./build.sh
+   ```
+    - Windows
+   ```sh
+   build.bat
    ```
 3. Run the application:
     - Linux (Ubuntu/Debian)

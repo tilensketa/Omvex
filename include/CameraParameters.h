@@ -1,6 +1,5 @@
 #pragma once
 
-#include <fstream>
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;

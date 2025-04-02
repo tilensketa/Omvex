@@ -324,7 +324,7 @@ void CameraCalibrator::draw() {
                              imagePos.y + start.y * mImageSize.y);
     ImVec2 endPos = ImVec2(imagePos.x + end.x * mImageSize.x,
                            imagePos.y + end.y * mImageSize.y);
-    ImU32 color = Colors::GetColorsImU32()[i];
+    ImU32 color = Colors::GetColorsImU32[i];
     drawList->AddLine(startPos, endPos, color, 2.0f);
   }
   // Coordinate System Circles
@@ -351,7 +351,7 @@ void CameraCalibrator::drag() {
   ImVec2 imageSize = ImGui::GetItemRectSize();
   mImageSize = glm::vec2(imageSize.x, imageSize.y);
 
-  for (size_t i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     glm::vec2 &pos = mCameraParameters->RCImagePos[i];
     char &dragging = mRCImageDrag[i];
     ImVec2 globalPos = ImVec2(imagePos.x + pos.x * mImageSize.x,
@@ -359,8 +359,8 @@ void CameraCalibrator::drag() {
 
     // Check if the circle is clicked to start dragging
     if (ImGui::IsMouseClicked(0) && !dragging) {
-      float distance = std::sqrt(std::pow(mousePos.x - globalPos.x, 2) +
-                                 std::pow(mousePos.y - globalPos.y, 2));
+      double distance = std::sqrt(std::pow(mousePos.x - globalPos.x, 2) +
+                                  std::pow(mousePos.y - globalPos.y, 2));
       if (distance <= mRadius) {
         dragging = true;
         break;

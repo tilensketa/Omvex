@@ -306,7 +306,7 @@ void Application::Run() {
 
     mFrameEnd = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> frameDuration = mFrameEnd - mFrameStart;
-    mTimeStep = frameDuration.count();
+    mTimeStep = static_cast<float>(frameDuration.count());
     fps = 1.0 / mTimeStep;
   }
 }

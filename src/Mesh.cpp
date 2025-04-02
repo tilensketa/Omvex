@@ -59,7 +59,7 @@ void Mesh::Draw(Shader &shader, Camera &camera, bool fill) const {
   else
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-  glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, static_cast<int>(mIndices.size()), GL_UNSIGNED_INT, 0);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   mVAO.Unbind();

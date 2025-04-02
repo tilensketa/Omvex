@@ -5,8 +5,9 @@
 #include <memory>
 
 #include "CameraParametersManager.h"
-#include "Colors.h"
 #include "TextureManager.h"
+
+#include "Colors.h"
 
 class CameraCalibrator {
 public:

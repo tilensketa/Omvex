@@ -1,6 +1,6 @@
 #include "Camera.h"
-#include "Utils.h"
 #include "Logger.h"
+#include "Utils.h"
 
 Camera::Camera(int width, int height, glm::vec3 position) {
   mResolution = glm::ivec2(width, height);

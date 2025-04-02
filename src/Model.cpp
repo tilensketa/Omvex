@@ -138,8 +138,8 @@ void Model::calculateBoundingBox() {
     mMinVert = vertices[0].Position;
     mMaxVert = vertices[0].Position;
     for (size_t i = 1; i < vertices.size(); i++) {
-      const glm::vec3 pos = vertices[i].Position;
-      for (size_t j = 0; j < 3; j++) {
+      const glm::vec3 pos = vertices[static_cast<int>(i)].Position;
+      for (int j = 0; j < 3; j++) {
         if (mMinVert[j] > pos[j])
           mMinVert[j] = pos[j];
         if (mMaxVert[j] < pos[j])

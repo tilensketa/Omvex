@@ -22,7 +22,7 @@ public:
 
   std::shared_ptr<Camera> GetCamera();
   std::shared_ptr<FBO> GetFBO();
-  const int GetCount() const { return mCameras.size(); }
+  const int GetCount() const { return static_cast<int>(mCameras.size()); }
 
   const int GetSelectedId() const { return mSelectedCameraId; }
 

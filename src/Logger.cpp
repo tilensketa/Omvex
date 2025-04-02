@@ -1,12 +1,13 @@
 #include "Logger.h"
 
-#include "Colors.h"
 #include "FileSystem.h"
 #include <chrono>
 #include <imgui.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
+#include "Colors.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -37,7 +38,7 @@ void Logger::ShowLogs() {
   for (const auto &log : mLogs) {
     if (log.first == LogLevel::DEBUG)
       continue;
-    ImU32 color = Colors::GetLogColorsImU32()[static_cast<int>(log.first)];
+    ImU32 color = Colors::GetLogColorsImU32[static_cast<int>(log.first)];
     ImGui::PushStyleColor(ImGuiCol_Text, color);
     ImGui::Text("%s", log.second.c_str());
     ImGui::PopStyleColor();

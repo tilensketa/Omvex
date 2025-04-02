@@ -45,7 +45,7 @@ void Viewport::Update(float ts) {
         for (size_t i = 0; i < mResolutionNames.size(); i++) {
           if (ImGui::MenuItem(mResolutionNames[i].c_str(), NULL,
                               mCurrentResolution == i)) {
-            mCurrentResolution = i;
+            mCurrentResolution = static_cast<int>(i);
             mImageResolutionHeight = mResolutionHeights[i];
             Logger::getInstance().Debug("Resolution changed to: " +
                                         mResolutionNames[mCurrentResolution]);

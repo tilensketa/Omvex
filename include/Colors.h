@@ -39,18 +39,10 @@ constexpr ImU32 ERROR_COLOR = RED;
 constexpr ImU32 FATAL_COLOR = MAGENTA;
 constexpr ImU32 DEBUG_COLOR = CYAN;
 
-inline std::vector<ImU32> GetLogColorsImU32() {
-  static std::vector<ImU32> colors = {INFO_COLOR,  WARN_COLOR,    ERROR_COLOR,
-                                      DEBUG_COLOR, SUCCESS_COLOR, FATAL_COLOR};
-  return colors;
-}
-
-// Retrieve all colors as a vector
-inline const std::vector<ImU32> &GetColorsImU32() {
-  static const std::vector<ImU32> colors = {
-      RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA, GRAY, ORANGE, PURPLE};
-  return colors;
-}
+constexpr ImU32 GetLogColorsImU32[] = {INFO_COLOR,  WARN_COLOR,    ERROR_COLOR,
+                                       DEBUG_COLOR, SUCCESS_COLOR, FATAL_COLOR};
+constexpr ImU32 GetColorsImU32[]{RED,     GREEN, BLUE,   YELLOW, CYAN,
+                                 MAGENTA, GRAY,  ORANGE, PURPLE};
 
 // Convert ImVec4 to IM_COL32
 inline ImU32 ImVec4ToImCol32(const ImVec4 &color) {

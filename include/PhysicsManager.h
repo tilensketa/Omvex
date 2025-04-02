@@ -23,7 +23,7 @@ public:
 
   bool IsSimulating() { return mSimulating; }
 
-  const int GetBodyCount() const { return mBodies.size(); }
+  const int GetBodyCount() const { return static_cast<int>(mBodies.size()); }
 
 private:
   void addGroundPlane();

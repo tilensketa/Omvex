@@ -1,6 +1,7 @@
 #include "CameraParameters.h"
-#include "Serialize.h"
 #include "Logger.h"
+#include "Serialize.h"
+#include <fstream>
 
 CameraParameters::CameraParameters(const std::string &filePath) {
   Path = filePath;
@@ -8,7 +9,7 @@ CameraParameters::CameraParameters(const std::string &filePath) {
   Loaded = false;
   std::vector<glm::vec2> positions = {
       {0.983, 0.391}, {0.438, 0.072}, {0.076, 0.348}, {0.707, 0.967}};
-  for (size_t i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     RCImagePos[i] = positions[i];
   }
   RCWorldSize = glm::vec2(9, 12);
@@ -23,34 +24,34 @@ CameraParameters::CameraParameters(const std::string &filePath) {
 json CameraParameters::ToJson() {
   json j;
   j["RefImageFilePath"] = RefImageFilePath;
-  Serialize::ToJson(j["ImageCalibrationSize"], ImageCalibratedSize);
-  Serialize::ToJson(j["RCWorldPos"], RCWorldPos);
-  Serialize::ToJson(j["RCImagePos"], RCImagePos);
-  Serialize::ToJson(j["RCWorldSize"], RCWorldSize);
-  Serialize::ToJson(j["NumGridPoints"], NumGridPoints);
-  Serialize::ToJson(j["Tvec"], Tvec);
-  Serialize::ToJson(j["Rvec"], Rvec);
-  Serialize::ToJson(j["Intrinsic"], Intrinsic);
-  Serialize::ToJson(j["Distortion"], Distortion);
-  Serialize::ToJson(j["Translation"], Translation);
-  Serialize::ToJson(j["Rotation"], Rotation);
+  Serialize::ToJson::IVec2(j["ImageCalibrationSize"], ImageCalibratedSize);
+  Serialize::ToJson::Vec3Arr4(j["RCWorldPos"], RCWorldPos);
+  Serialize::ToJson::Vec2Arr4(j["RCImagePos"], RCImagePos);
+  Serialize::ToJson::Vec2(j["RCWorldSize"], RCWorldSize);
+  Serialize::ToJson::IVec2(j["NumGridPoints"], NumGridPoints);
+  Serialize::ToJson::Vec3(j["Tvec"], Tvec);
+  Serialize::ToJson::Vec3(j["Rvec"], Rvec);
+  Serialize::ToJson::Mat3x3(j["Intrinsic"], Intrinsic);
+  Serialize::ToJson::Vec4(j["Distortion"], Distortion);
+  Serialize::ToJson::Vec3(j["Translation"], Translation);
+  Serialize::ToJson::Mat3x3(j["Rotation"], Rotation);
   return j;
 }
 
 // Deserialize
 void CameraParameters::FromJson(const json &j) {
   RefImageFilePath = j.at("RefImageFilePath").get<std::string>();
-  Serialize::FromJson(j.at("ImageCalibrationSize"), ImageCalibratedSize);
-  Serialize::FromJson(j.at("RCWorldPos"), RCWorldPos);
-  Serialize::FromJson(j.at("RCImagePos"), RCImagePos);
-  Serialize::FromJson(j.at("RCWorldSize"), RCWorldSize);
-  Serialize::FromJson(j.at("NumGridPoints"), NumGridPoints);
-  Serialize::FromJson(j.at("Tvec"), Tvec);
-  Serialize::FromJson(j.at("Rvec"), Rvec);
-  Serialize::FromJson(j.at("Intrinsic"), Intrinsic);
-  Serialize::FromJson(j.at("Distortion"), Distortion);
-  Serialize::FromJson(j.at("Translation"), Translation);
-  Serialize::FromJson(j.at("Rotation"), Rotation);
+  Serialize::FromJson::IVec2(j.at("ImageCalibrationSize"), ImageCalibratedSize);
+  Serialize::FromJson::Vec3Arr4(j.at("RCWorldPos"), RCWorldPos);
+  Serialize::FromJson::Vec2Arr4(j.at("RCImagePos"), RCImagePos);
+  Serialize::FromJson::Vec2(j.at("RCWorldSize"), RCWorldSize);
+  Serialize::FromJson::IVec2(j.at("NumGridPoints"), NumGridPoints);
+  Serialize::FromJson::Vec3(j.at("Tvec"), Tvec);
+  Serialize::FromJson::Vec3(j.at("Rvec"), Rvec);
+  Serialize::FromJson::Mat3x3(j.at("Intrinsic"), Intrinsic);
+  Serialize::FromJson::Vec4(j.at("Distortion"), Distortion);
+  Serialize::FromJson::Vec3(j.at("Translation"), Translation);
+  Serialize::FromJson::Mat3x3(j.at("Rotation"), Rotation);
 }
 
 void CameraParameters::Save() {
@@ -58,9 +59,11 @@ void CameraParameters::Save() {
   if (outFile.is_open()) {
     outFile << ToJson().dump(4);
     outFile.close();
-    Logger::getInstance().Success("CameraParameters: Successfully saved file: " + Path);
+    Logger::getInstance().Success(
+        "CameraParameters: Successfully saved file: " + Path);
   } else {
-    Logger::getInstance().Error("CameraParameters: Failed to open file for writing: " + Path);
+    Logger::getInstance().Error(
+        "CameraParameters: Failed to open file for writing: " + Path);
   }
 }
 void CameraParameters::Load(const std::string &filePath) {
@@ -72,8 +75,10 @@ void CameraParameters::Load(const std::string &filePath) {
     FromJson(j);
     Path = filePath;
     Loaded = true;
-    Logger::getInstance().Success("CameraParameters: Loaded parameters from: " + filePath);
+    Logger::getInstance().Success("CameraParameters: Loaded parameters from: " +
+                                  filePath);
   } else {
-    Logger::getInstance().Error("CameraParameters: Failed to open file for reading: " + filePath);
+    Logger::getInstance().Error(
+        "CameraParameters: Failed to open file for reading: " + filePath);
   }
 }

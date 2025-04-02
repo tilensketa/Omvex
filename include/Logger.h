@@ -32,7 +32,7 @@ private:
   std::pair<std::string, std::string> logLevel2ColorType(LogLevel logLevel);
 
 private:
-  static constexpr size_t MAX_LOGS = 20;
+  static constexpr size_t MAX_LOGS = 50;
   std::deque<std::pair<LogLevel, std::string>> mLogs;
   std::ofstream mLogFile;
 };

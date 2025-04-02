@@ -26,10 +26,10 @@ void CameraParametersManager::AddParameter(const std::string &path,
       if (cameraParam->Loaded) {
         Logger::getInstance().Debug("Camera parameters already loaded: " +
                                     param->Path);
-        mSelectedParameterId = i;
+        mSelectedParameterId = static_cast<int>(i);
         return;
       } else {
-        mSelectedParameterId = i;
+        mSelectedParameterId = static_cast<int>(i);
         Remove();
       }
     }
@@ -38,7 +38,7 @@ void CameraParametersManager::AddParameter(const std::string &path,
       "CameraParametersManager: Added camera parameters " + param->Path);
   mCameraParameters.push_back(param);
   mParameterNames.push_back(param->Path + " / " + param->RefImageFilePath);
-  mSelectedParameterId = mCameraParameters.size() - 1;
+  mSelectedParameterId = static_cast<int>(mCameraParameters.size()) - 1;
 }
 
 void CameraParametersManager::Remove() {
@@ -67,7 +67,7 @@ bool CameraParametersManager::ShowParameters() {
       const bool is_selected = (mSelectedParameterId == n);
       if (ImGui::Selectable(mParameterNames[n].c_str(), is_selected) &&
           mSelectedParameterId != n) {
-        mSelectedParameterId = n;
+        mSelectedParameterId = static_cast<int>(n);
       }
       if (is_selected)
         ImGui::SetItemDefaultFocus();

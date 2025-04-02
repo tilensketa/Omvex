@@ -6,7 +6,8 @@ PhysicsManager::PhysicsManager() {
   reactphysics3d::PhysicsWorld::WorldSettings settings;
   settings.defaultVelocitySolverNbIterations = 20;
   settings.isSleepingEnabled = true;
-  settings.gravity = reactphysics3d::Vector3(0, 0, -9.81);
+  settings.gravity =
+      reactphysics3d::Vector3(0, 0, reactphysics3d::decimal(-9.81));
 
   mPhysicsCommon = std::make_unique<reactphysics3d::PhysicsCommon>();
   reactphysics3d::PhysicsWorld *rawWorld =

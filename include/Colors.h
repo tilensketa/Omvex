@@ -66,6 +66,7 @@ inline std::vector<glm::vec3> GenerateSegmentedColors(int numMeshes) {
   float s = 1.0f;
   float v = 1.0f;
   std::vector<glm::vec3> colors;
+  numMeshes *= 12;
   colors.resize(numMeshes);
   for (size_t i = 0; i < numMeshes; i++) {
     float h = (float(i) / numMeshes) * 360.0f;

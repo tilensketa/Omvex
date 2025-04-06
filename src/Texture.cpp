@@ -42,6 +42,37 @@ Texture::Texture(int width, int height) {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+Texture::Texture(const std::vector<glm::vec3>& pixelColors) {
+  mWidth = static_cast<int>(pixelColors.size());
+  mHeight = 1;
+  mChannels = 4;
+  mSize = glm::vec2(static_cast<float>(mWidth), 1.0f);
+  mAspectRatio = mSize.x;
+
+  std::vector<unsigned char> imageData(mWidth * 4); // RGBA per pixel
+
+  for (int i = 0; i < mWidth; ++i) {
+    glm::vec4 color = glm::vec4(pixelColors[i], 1.0f);
+    imageData[i * 4 + 0] = static_cast<unsigned char>(glm::clamp(color.r, 0.0f, 1.0f) * 255.0f);
+    imageData[i * 4 + 1] = static_cast<unsigned char>(glm::clamp(color.g, 0.0f, 1.0f) * 255.0f);
+    imageData[i * 4 + 2] = static_cast<unsigned char>(glm::clamp(color.b, 0.0f, 1.0f) * 255.0f);
+    imageData[i * 4 + 3] = static_cast<unsigned char>(glm::clamp(color.a, 0.0f, 1.0f) * 255.0f);
+  }
+
+  // Generate texture
+  glGenTextures(1, &mTextureID);
+  glBindTexture(GL_TEXTURE_2D, mTextureID);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData.data());
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 Texture::~Texture() { glDeleteTextures(1, &mTextureID); }
 
 void Texture::Bind() const {

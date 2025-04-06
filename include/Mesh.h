@@ -12,6 +12,8 @@ public:
   Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices,
        std::vector<std::string> &textures, std::string name = "");
   static Mesh CreateQuad(float halfSide);
+  static Mesh CreateCuboid(const glm::vec3 &pos, const glm::vec3 &size,
+                           const glm::vec3 &rotation);
 
   void Draw(Shader &shader, Camera &camera, bool fill) const;
 

@@ -151,8 +151,12 @@ void Viewport::Update(float ts) {
     mViewMode = ViewMode::Shaded;
   }
   ImGui::SameLine();
-  if (ImGui::RadioButton("Segmented", mViewMode == ViewMode::Segmented)) {
-    mViewMode = ViewMode::Segmented;
+  if (ImGui::RadioButton("Segmented2D", mViewMode == ViewMode::Segmented2D)) {
+    mViewMode = ViewMode::Segmented2D;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Segmented3D", mViewMode == ViewMode::Segmented3D)) {
+    mViewMode = ViewMode::Segmented3D;
   }
 
   mCameraManager.ShowCameras();
@@ -215,7 +219,9 @@ void Viewport::Update(float ts) {
         ImGui::OpenPopup("ErrorRender");
       }
     } else {
-      mRenderManager.UpdateRenderClick(*mActiveFolder);
+      mRenderManager.UpdateRenderClick(*mActiveFolder,
+                                       mModelManager.GetSegmentedColors(),
+                                       mModelManager.GetModelNames());
     }
   }
   if (mRenderManager.IsRendering()) {
@@ -286,7 +292,9 @@ void Viewport::renderSceneToFramebuffer() {
   } else {
     mDim = mMaxDim;
   }
-  if (mViewMode != ViewMode::Segmented) {
+  // Draw background if not segmented
+  if (mViewMode != ViewMode::Segmented2D &&
+      mViewMode != ViewMode::Segmented3D) {
     if (mCamera->GetBgImage() != "") {
       glDisable(GL_DEPTH_TEST);
       mBgQuadShader->Activate();
@@ -295,7 +303,9 @@ void Viewport::renderSceneToFramebuffer() {
       glEnable(GL_DEPTH_TEST);
     }
   }
-  if (!mRenderManager.IsRendering() && mViewMode != ViewMode::Segmented) {
+  // Draw spawning area mesh
+  if (!mRenderManager.IsRendering() && mViewMode != ViewMode::Segmented2D &&
+      mViewMode != ViewMode::Segmented3D) {
     mSegmentedShader->Activate();
     mSegmentedShader->SetVec3("uniqueColor", glm::vec3(1, 1, 0));
     mSpawningPreviewMesh->Draw(*mSegmentedShader, *mCamera, false);
@@ -303,6 +313,16 @@ void Viewport::renderSceneToFramebuffer() {
 
   for (size_t i = 0; i < mModelManager.GetCount(); i++) {
     std::shared_ptr<Model> &model = mModelManager.GetModels()[i];
+    if (mViewMode == ViewMode::Segmented3D) {
+      int j = 0;
+      for (Mesh &corner : model->GetFeautureMeshes()) {
+        mSegmentedShader->Activate();
+        glm::vec3 &uniqueColor = mModelManager.GetSegmentedColors()[i * 12 + j];
+        mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
+        corner.Draw(*mSegmentedShader, *mCamera, true);
+        j++;
+      }
+    }
     for (Mesh &mesh : model->GetMeshes()) {
       if (mViewMode == ViewMode::Flat) {
         mShadedShader->Activate();
@@ -314,9 +334,9 @@ void Viewport::renderSceneToFramebuffer() {
         mShadedShader->SetBool("IsShaded", true);
         mShadedShader->SetFloat("RandomDim", mDim);
         mesh.Draw(*mShadedShader, *mCamera, true);
-      } else if (mViewMode == ViewMode::Segmented) {
+      } else if (mViewMode == ViewMode::Segmented2D) {
         mSegmentedShader->Activate();
-        glm::vec3 &uniqueColor = mModelManager.GetSegmentedColors()[i];
+        glm::vec3 &uniqueColor = mModelManager.GetSegmentedColors()[i * 12];
         mSegmentedShader->SetVec3("uniqueColor", uniqueColor);
         mesh.Draw(*mSegmentedShader, *mCamera, true);
       }

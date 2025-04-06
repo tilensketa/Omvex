@@ -4,12 +4,14 @@
 #include "FBO.h"
 #include <string>
 
-enum ViewMode { Flat = 0, Shaded, Segmented};
+enum ViewMode { Flat = 0, Shaded, Segmented2D, Segmented3D };
 
 class RenderManager {
 public:
   void Update(std::shared_ptr<FBO> frameBuffer, bool canRender);
-  void UpdateRenderClick(const std::string &folderPath);
+  void UpdateRenderClick(const std::string &folderPath,
+                         const std::vector<glm::vec3> &colors,
+                         const std::vector<std::string> &modelNames);
 
   void SetViewMode(ViewMode *viewMode) { mViewMode = viewMode; }
   void SetCameraManager(CameraManager *cameraManager) {
@@ -23,6 +25,7 @@ public:
   int GetRenderId() { return mRenderId; }
   int GetRenderSubId() { return mRenderSubId; }
   int GetRenders() { return mRenders; }
+  const std::string &GetRenderFolder() const { return mRenderFolder; }
 
 private:
   void render(std::shared_ptr<FBO> frameBuffer);

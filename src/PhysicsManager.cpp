@@ -106,6 +106,9 @@ void PhysicsManager::Update(std::vector<std::shared_ptr<Model>> &models) {
     for (Mesh &mesh : models[i - 1]->GetMeshes()) {
       mesh.SetTransform(mat);
     }
+    for (Mesh &corner : models[i - 1]->GetFeautureMeshes()) {
+      corner.SetTransform(mat);
+    }
     if (!mBodies[i]->isSleeping()) {
       sleep = false;
     }

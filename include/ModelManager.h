@@ -13,6 +13,7 @@ public:
   std::vector<std::shared_ptr<Model>> &GetModels() { return mModels; }
   std::vector<glm::vec3> &GetSegmentedColors() { return mModelSegmentedColors; }
   const int GetCount() const { return static_cast<int>(mModels.size()); }
+  const std::vector<std::string> &GetModelNames() const { return mModelNames; }
 
   const int GetSelectedId() const { return mSelectedModelId; }
 

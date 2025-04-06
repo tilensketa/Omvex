@@ -1,16 +1,11 @@
 #include "Model.h"
 #include "FileSystem.h"
+#include "Random.h"
 #include "Utils.h"
 
 Model::Model(const std::string &path) {
   loadModel(path);
   Logger::getInstance().Success("Created model " + path);
-}
-
-void Model::Draw(Shader &shader, Camera &camera, bool fill) const {
-  for (const auto &mesh : mMeshes) {
-    mesh.Draw(shader, camera, fill);
-  }
 }
 
 void Model::loadModel(const std::string &path) {
@@ -30,6 +25,7 @@ void Model::loadModel(const std::string &path) {
   mDirectory = FileSystem::GetDirectoryFromPath(path);
   processNode(scene->mRootNode, scene);
   calculateBoundingBox();
+  generateCornerMeshes();
 
   Logger::getInstance().Debug("MODEL");
   Logger::getInstance().Debug("|-Model path: " + path);
@@ -138,7 +134,7 @@ void Model::calculateBoundingBox() {
     mMinVert = vertices[0].Position;
     mMaxVert = vertices[0].Position;
     for (size_t i = 1; i < vertices.size(); i++) {
-      const glm::vec3 pos = vertices[static_cast<int>(i)].Position;
+      const glm::vec3 pos = vertices[i].Position;
       for (int j = 0; j < 3; j++) {
         if (mMinVert[j] > pos[j])
           mMinVert[j] = pos[j];
@@ -146,5 +142,34 @@ void Model::calculateBoundingBox() {
           mMaxVert[j] = pos[j];
       }
     }
+  }
+}
+
+void Model::generateCornerMeshes() {
+  Logger::getInstance().Debug("Generating corner meshes");
+  std::vector<glm::vec3> feautures = {
+      {mMinVert.x, mMinVert.y, mMinVert.z},
+      {mMaxVert.x, mMinVert.y, mMinVert.z},
+      {mMinVert.x, mMaxVert.y, mMinVert.z},
+      {mMaxVert.x, mMaxVert.y, mMinVert.z},
+      {mMinVert.x, mMinVert.y, mMaxVert.z},
+      {mMaxVert.x, mMinVert.y, mMaxVert.z},
+      {mMinVert.x, mMaxVert.y, mMaxVert.z},
+      {mMaxVert.x, mMaxVert.y, mMaxVert.z},
+      {0, 0, 0},
+      {mMaxVert.x, 0, 0},
+      {0, mMaxVert.y, 0},
+      {0, 0, mMaxVert.z},
+  };
+  mFeautureMeshes.reserve(12);
+  for (size_t i = 0; i < feautures.size(); i++) {
+    glm::vec3 size = glm::vec3(0.8f, 0.3f, 0.3f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    if (i >= 2 && i <=5 || i == 11)
+      rotation = glm::vec3(0,0,90);
+    if(i == 10)
+      rotation = glm::vec3(0,90,0);
+    Mesh corner = Mesh::CreateCuboid(feautures[i], size, rotation);
+    mFeautureMeshes.push_back(corner);
   }
 }

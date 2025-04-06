@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <vector>
 
 #include "Logger.h"
 
@@ -10,6 +11,7 @@ class Texture {
 public:
   Texture(const std::string &filePath);
   Texture(int width, int height);
+  Texture(const std::vector<glm::vec3>& pixelColors);
   ~Texture();
 
   void Bind() const;

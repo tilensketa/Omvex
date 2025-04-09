@@ -1,6 +1,7 @@
 #include "CameraParameters.h"
 #include "Logger.h"
 #include "Serialize.h"
+#include "Utils.h"
 #include <fstream>
 
 CameraParameters::CameraParameters(const std::string &filePath) {
@@ -52,6 +53,22 @@ void CameraParameters::FromJson(const json &j) {
   Serialize::FromJson::Vec4(j.at("Distortion"), Distortion);
   Serialize::FromJson::Vec3(j.at("Translation"), Translation);
   Serialize::FromJson::Mat3x3(j.at("Rotation"), Rotation);
+
+  Logger::getInstance().Debug("Loaded camera parameters: " + Path);
+  Logger::getInstance().Debug("RefImageFilePath: " + RefImageFilePath);
+  Logger::getInstance().Debug("ImageCalibrationSize: " + Utils::GlmToString::Vec2(ImageCalibratedSize));
+  Logger::getInstance().Debug("RCWorldPos, RCImagePos");
+  for (int i = 0; i < 4; i++){
+    Logger::getInstance().Debug(Utils::GlmToString::Vec3(RCWorldPos[i]) + ", " + Utils::GlmToString::Vec2(RCImagePos[i]));
+  }
+  Logger::getInstance().Debug("RCWorldSize: " + Utils::GlmToString::Vec2(RCWorldSize));
+  Logger::getInstance().Debug("NumGridPoints: " + Utils::GlmToString::Vec2(NumGridPoints));
+  Logger::getInstance().Debug("Tvec: " + Utils::GlmToString::Vec3(Tvec));
+  Logger::getInstance().Debug("Rvec: " + Utils::GlmToString::Vec3(Rvec));
+  Logger::getInstance().Debug("Intrinsic: " + Utils::GlmToString::Mat3(Intrinsic));
+  Logger::getInstance().Debug("Distorsion: " + Utils::GlmToString::Vec4(Distortion));
+  Logger::getInstance().Debug("Translation: " + Utils::GlmToString::Vec3(Translation));
+  Logger::getInstance().Debug("Rotation: " + Utils::GlmToString::Mat3(Rotation));
 }
 
 void CameraParameters::Save() {

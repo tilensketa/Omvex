@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <memory>
+#include <queue>
 #include <vector>
 
 #include "Camera.h"
@@ -33,6 +34,10 @@ public:
   void SetTextureManager(std::shared_ptr<TextureManager> &textureManager) {
     mTextureManager = textureManager;
   }
+  void SetIsLoading(std::shared_ptr<bool> &loading) { mIsLoading = loading; }
+  void SetLoadingFracture(std::shared_ptr<float> &fracture) {
+    mLoadingFracture = fracture;
+  }
 
   void Update(float ts);
 
@@ -48,6 +53,7 @@ private:
   void removeCamera();
   void switchCamFBO();
 
+  void handleLoad();
   void loadExample();
 
 private:
@@ -86,4 +92,10 @@ private:
 
   PhysicsManager mPhysicsManager;
   RenderManager mRenderManager;
+
+  std::queue<std::string> mModelLoadingQueue;
+  std::queue<std::string> mCameraLoadingQueue;
+  std::shared_ptr<bool> mIsLoading;
+  int mLoadingAll = 0;
+  std::shared_ptr<float> mLoadingFracture;
 };

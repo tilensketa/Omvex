@@ -14,7 +14,7 @@ public:
   void AddFBO(std::shared_ptr<FBO> fbo) { mFrameBuffers.push_back(fbo); }
   bool Remove();
 
-  bool HandleSwitching(GLFWwindow *window);
+  bool HandleSwitching();
   void SwitchNext();
   void SwitchPrevious();
 
@@ -35,7 +35,5 @@ private:
   std::vector<std::string> mCameraNames;
   int mSelectedCameraId = -1;
 
-  float mCooldown = 0.25f;
-  std::chrono::time_point<std::chrono::high_resolution_clock> mPrevPress;
   bool mSwitched = true;
 };

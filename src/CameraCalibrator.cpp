@@ -12,7 +12,7 @@
 #define UPDATE_STEPS 2
 
 void CameraCalibrator::calculateRotationTranslation() {
-  if (mCameraParameters == nullptr)
+  if (mCameraParameters == nullptr || mImageSize.x == 0 || mImageSize.y == 0)
     return;
   std::vector<cv::Point3f> objectPoints(4);
   std::vector<cv::Point2f> imagePoints(4);
@@ -127,7 +127,7 @@ void CameraCalibrator::Update() {
     }
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("Example")) {
-        std::string paramFilePath = mExampleFolderPath + "/backgrounds/18.json";
+        std::string paramFilePath = mExampleFolderPath + "/backgrounds/03.json";
         mCameraParametersManager.AddParameter(paramFilePath, true);
         mCameraParameters = mCameraParametersManager.GetCameraParameter();
         if (mCameraParameters != nullptr) {
@@ -187,6 +187,8 @@ void CameraCalibrator::Update() {
   if (ImGui::Button("Remove")) {
     mCameraParametersManager.Remove();
   }
+
+  handleLoad();
 
   if (mCameraParameters != nullptr &&
       mCameraParameters->RefImageFilePath != "") {
@@ -440,14 +442,8 @@ void CameraCalibrator::handleOpenImage() {
   const std::vector<std::string> &imageFilePaths = FileSystem::OpenFiles(
       *mActiveFolder, "Image .jpg .jpeg .png", "*.jpg *.jpeg *.png");
   for (const std::string &imageFilePath : imageFilePaths) {
-    if (imageFilePath == "")
-      continue;
-
-    mCameraParametersManager.AddParameter(imageFilePath, false);
-    mCameraParameters = mCameraParametersManager.GetCameraParameter();
-    if (mCameraParameters != nullptr) {
-      onParamChange();
-    }
+    if (imageFilePath != "")
+      mCameraImagesLoadingQueue.push(imageFilePath);
   }
 }
 
@@ -455,15 +451,48 @@ void CameraCalibrator::handleOpenParams() {
   const std::vector<std::string> &paramFilePaths =
       FileSystem::OpenFiles(*mActiveFolder, "Parameters .json", "*.json");
   for (const std::string &paramFilePath : paramFilePaths) {
-    if (paramFilePath == "")
-      continue;
-
-    mCameraParametersManager.AddParameter(paramFilePath, true);
-    mCameraParameters = mCameraParametersManager.GetCameraParameter();
-    if (mCameraParameters != nullptr) {
-      onParamChange();
-    }
+    if (paramFilePath != "")
+      mCameraParamsLoadingQueue.push(paramFilePath);
   }
+}
+
+void CameraCalibrator::addParams(const std::string &paramFile) {
+  mCameraParametersManager.AddParameter(paramFile, true);
+  mCameraParameters = mCameraParametersManager.GetCameraParameter();
+  if (mCameraParameters != nullptr) {
+    onParamChange();
+  }
+}
+void CameraCalibrator::addImage(const std::string &imageFile) {
+  mCameraParametersManager.AddParameter(imageFile, false);
+  mCameraParameters = mCameraParametersManager.GetCameraParameter();
+  if (mCameraParameters != nullptr) {
+    onParamChange();
+  }
+}
+
+void CameraCalibrator::handleLoad() {
+  bool prevLoading = *mIsLoading;
+  *mIsLoading = false;
+  if (!mCameraParamsLoadingQueue.empty()) {
+    const std::string paramsPath = mCameraParamsLoadingQueue.front();
+    mCameraParamsLoadingQueue.pop();
+    addParams(paramsPath);
+    *mIsLoading = true;
+  }
+  if (!mCameraImagesLoadingQueue.empty() && !*mIsLoading) {
+    const std::string imagePath = mCameraImagesLoadingQueue.front();
+    mCameraImagesLoadingQueue.pop();
+    addImage(imagePath);
+    *mIsLoading = true;
+  }
+  int currentLoading = static_cast<int>(mCameraImagesLoadingQueue.size() +
+                                        mCameraParamsLoadingQueue.size());
+  if (*mIsLoading && !prevLoading) {
+    mLoadingAll = currentLoading;
+  }
+  *mLoadingFracture = 1 - (static_cast<float>(currentLoading) /
+                           static_cast<float>(mLoadingAll));
 }
 
 void CameraCalibrator::saveParams() {

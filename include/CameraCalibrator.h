@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <memory>
+#include <queue>
 
 #include "CameraParametersManager.h"
 #include "TextureManager.h"
@@ -11,7 +12,7 @@
 
 class CameraCalibrator {
 public:
-  CameraCalibrator(const std::string& baseFolder);
+  CameraCalibrator(const std::string &baseFolder);
 
   void Update();
   void SetActiveFolder(std::shared_ptr<std::string> &activeFolder) {
@@ -19,6 +20,10 @@ public:
   }
   void SetTextureManager(std::shared_ptr<TextureManager> &textureManager) {
     mTextureManager = textureManager;
+  }
+  void SetIsLoading(std::shared_ptr<bool> loading) { mIsLoading = loading; }
+  void SetLoadingFracture(std::shared_ptr<float> fracture) {
+    mLoadingFracture = fracture;
   }
 
 private:
@@ -37,6 +42,9 @@ private:
   void saveParams();
 
   void onParamChange();
+  void handleLoad();
+  void addParams(const std::string &paramFile);
+  void addImage(const std::string &imageFile);
 
 private:
   char mRCImageDrag[4];
@@ -46,7 +54,7 @@ private:
   std::shared_ptr<TextureManager> mTextureManager;
   std::shared_ptr<Texture> mTexture = nullptr;
   std::string mLoadedImageFilename = "";
-  glm::vec2 mImageSize;
+  glm::vec2 mImageSize = glm::vec2(0);
 
   std::shared_ptr<std::string> mActiveFolder = nullptr;
   std::string mExampleFolderPath = "";
@@ -58,4 +66,10 @@ private:
                                   Colors::BLUE};
   std::vector<ImU32> mRCColors = {Colors::BLUE, Colors::YELLOW, Colors::CYAN,
                                   Colors::MAGENTA};
+
+  std::queue<std::string> mCameraParamsLoadingQueue;
+  std::queue<std::string> mCameraImagesLoadingQueue;
+  std::shared_ptr<bool> mIsLoading;
+  std::shared_ptr<float> mLoadingFracture;
+  int mLoadingAll = 0;
 };

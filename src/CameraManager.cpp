@@ -1,9 +1,7 @@
 #include "CameraManager.h"
 #include <imgui.h>
 
-CameraManager::CameraManager() {
-  mPrevPress = std::chrono::high_resolution_clock::now();
-}
+CameraManager::CameraManager() {}
 
 std::shared_ptr<Camera> CameraManager::GetCamera() {
   if (GetCount() == 0) {
@@ -27,27 +25,7 @@ void CameraManager::AddCamera(std::shared_ptr<Camera> camera) {
   Logger::getInstance().Success("Added camera: " + camera->GetBgImage());
 }
 
-bool CameraManager::HandleSwitching(GLFWwindow *window) {
-  int oldSelectedCameraId = mSelectedCameraId;
-  for (size_t i = 0; i < mCameras.size(); ++i) {
-    int key = GLFW_KEY_1 + static_cast<int>(i);
-    if (glfwGetKey(window, key) == GLFW_PRESS) {
-      mSelectedCameraId = static_cast<int>(i);
-      mSwitched = true;
-    }
-  }
-
-  auto now = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> elapsed = now - mPrevPress;
-  if (elapsed.count() >= mCooldown) {
-    if (glfwGetKey(window, GLFW_KEY_LEFT)) {
-      SwitchPrevious();
-      mPrevPress = now;
-    } else if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
-      SwitchNext();
-      mPrevPress = now;
-    }
-  }
+bool CameraManager::HandleSwitching() {
   bool s = mSwitched;
   mSwitched = false;
   return s;

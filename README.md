@@ -79,15 +79,17 @@ Ensure you have the following installed:
 ## Screenshots
 
 ### Application Preview
-Camera calibration (dark, light theme)
+Camera calibration (light, dark, black themes)
 <p align="center">
-  <img src="resources/screenshots/camera_calibration_dark_26032025.png" width="49%">
-  <img src="resources/screenshots/camera_calibration_light_26032025.png" width="49%">
+  <img src="resources/screenshots/camera_calibration_light_09042025.png" width="49%">
+  <img src="resources/screenshots/camera_calibration_dark_09042025.png" width="49%">
+  <img src="resources/screenshots/camera_calibration_black_09042025.png" width="49%">
 </p>
-Viewport (shaded, segmented)
+Viewport (shaded, segmented2d, segmented3d modes)
 <p align="center">
-  <img src="resources/screenshots/viewport_shaded_26032025.png" width="49%">
-  <img src="resources/screenshots/viewport_segmented_26032025.png" width="49%">
+  <img src="resources/screenshots/viewport_shaded_09042025.png" width="49%">
+  <img src="resources/screenshots/viewport_segmented2d_09042025.png" width="49%">
+  <img src="resources/screenshots/viewport_segmented3d_09042025.png" width="49%">
 </p>
 
 ## Author

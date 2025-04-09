@@ -93,6 +93,8 @@ void Viewport::Update(float ts) {
     ImGui::EndMainMenuBar();
   }
 
+  handleLoad();
+
   if (mRenderManager.IsRendering() && !mPhysicsManager.IsSimulating() &&
       (mRenderManager.GetRenderId() % mCameraManager.GetCount() == 0 ||
        mRenderManager.GetRenderId() == 0) &&
@@ -102,10 +104,10 @@ void Viewport::Update(float ts) {
   }
   mPhysicsManager.Update(mModelManager.GetModels());
 
-  bool switchCam = mCameraManager.HandleSwitching(mWindow);
-  if (switchCam) {
+  if (mCameraManager.HandleSwitching()) {
     switchCamFBO();
   }
+
   renderSceneToFramebuffer();
 
   // Render if simulation is over
@@ -213,20 +215,21 @@ void Viewport::Update(float ts) {
   if (ImGui::IsItemHovered()) {
     ImGui::SetTooltip("This input sets number of images to be rendered");
   }
-  if (ImGui::Button("Render")) {
-    if (mCameraManager.GetCount() == 0) {
-      if (!ImGui::IsPopupOpen("ErrorRender")) {
-        ImGui::OpenPopup("ErrorRender");
+  if (!mRenderManager.IsRendering()) {
+    if (ImGui::Button("Start Render")) {
+      if (mCameraManager.GetCount() == 0) {
+        if (!ImGui::IsPopupOpen("ErrorRender")) {
+          ImGui::OpenPopup("ErrorRender");
+        }
+      } else {
+        mRenderManager.UpdateRenderClick(*mActiveFolder,
+                                         mModelManager.GetSegmentedColors(),
+                                         mModelManager.GetModelNames());
       }
-    } else {
-      mRenderManager.UpdateRenderClick(*mActiveFolder,
-                                       mModelManager.GetSegmentedColors(),
-                                       mModelManager.GetModelNames());
     }
   }
   if (mRenderManager.IsRendering()) {
-    ImGui::SameLine();
-    if (ImGui::Button("Stop Rendering")) {
+    if (ImGui::Button("Stop Render")) {
       mRenderManager.StopRendering();
     }
   }
@@ -350,7 +353,8 @@ void Viewport::handleOpenParams() {
       FileSystem::OpenFiles(*mActiveFolder, "Parameters .json", "*.json");
   for (const std::string &paramFilePath : paramFilePaths) {
     if (paramFilePath != "")
-      addCamera(paramFilePath);
+      mCameraLoadingQueue.push(paramFilePath);
+    // addCamera(paramFilePath);
   }
 }
 
@@ -397,7 +401,8 @@ void Viewport::handleOpenModel() {
       FileSystem::OpenFiles(*mActiveFolder, "Model .obj", "*.obj");
   for (const std::string &modelFilePath : modelFilePaths) {
     if (modelFilePath != "") {
-      addModel(modelFilePath);
+      // addModel(modelFilePath);
+      mModelLoadingQueue.push(modelFilePath);
     }
   }
 }
@@ -413,6 +418,30 @@ void Viewport::removeModel() {
   mModelManager.Remove();
 }
 
+void Viewport::handleLoad() {
+  bool prevLoading = *mIsLoading;
+  *mIsLoading = false;
+  if (!mCameraLoadingQueue.empty()) {
+    const std::string cameraPath = mCameraLoadingQueue.front();
+    mCameraLoadingQueue.pop();
+    addCamera(cameraPath);
+    *mIsLoading = true;
+  }
+  if (!mModelLoadingQueue.empty() && !*mIsLoading) {
+    const std::string modelPath = mModelLoadingQueue.front();
+    mModelLoadingQueue.pop();
+    addModel(modelPath);
+    *mIsLoading = true;
+  }
+  int currentLoading =
+      static_cast<int>(mModelLoadingQueue.size() + mCameraLoadingQueue.size());
+  if (*mIsLoading && !prevLoading) {
+    mLoadingAll = currentLoading;
+  }
+  *mLoadingFracture = 1 - (static_cast<float>(currentLoading) /
+                           static_cast<float>(mLoadingAll));
+}
+
 void Viewport::loadExample() {
   for (size_t i = 1; i < 29; i++) {
     std::ostringstream oss;
@@ -420,7 +449,8 @@ void Viewport::loadExample() {
     std::string filename = oss.str();
     std::string cameraPath =
         mExampleFolderPath + "backgrounds/" + filename + ".json";
-    addCamera(cameraPath);
+    mCameraLoadingQueue.push(cameraPath);
+    // addCamera(cameraPath);
   }
   std::vector<std::string> modelFiles = {
       "Deodorant/deodorant.obj",
@@ -435,6 +465,7 @@ void Viewport::loadExample() {
       "Wrench/wrench.obj"};
   for (const std::string &modelFile : modelFiles) {
     std::string modelPath = mExampleFolderPath + "models/" + modelFile;
-    addModel(modelPath);
+    // addModel(modelPath);
+    mModelLoadingQueue.push(modelPath);
   }
 }

@@ -55,9 +55,11 @@ bool ColoredDragInt(const char *label, int *value, const ImVec4 &color,
                     float width = 100.0f, float speed = 1, int min = 1,
                     int max = 50);
 // Helper function to render a table with columns, values, and colors
-void RenderPointsTable(const std::string &tableName, const glm::vec3 worldPos[4],
-    const glm::vec2 imagePos[4], const glm::vec2 &imageSize,
-    const std::vector<ImU32> &colors);
+void RenderPointsTable(const std::string &tableName,
+                       const glm::vec3 worldPos[4], const glm::vec2 imagePos[4],
+                       const glm::vec2 &imageSize,
+                       const std::vector<ImU32> &colors);
 void CenterText(const std::string &text);
+ImVec4 GrayAlphaToImVec4(const float &rgb, const float &alpha);
 } // namespace ImGuiHelpers
 } // namespace Utils

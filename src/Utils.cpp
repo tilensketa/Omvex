@@ -242,6 +242,8 @@ void CenterText(const std::string &text) {
   ImGui::SetCursorPos(windowCenter);
   ImGui::Text("%s", text.c_str());
 }
-
+ImVec4 GrayAlphaToImVec4(const float &rgb, const float &alpha) {
+  return ImVec4(rgb, rgb, rgb, alpha);
+}
 } // namespace ImGuiHelpers
 } // namespace Utils

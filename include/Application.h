@@ -14,6 +14,7 @@
 #include <memory>
 
 enum Mode { CameraCalibration, Viewport3d };
+enum Theme { Light, Dark, Black };
 
 class Application {
 public:
@@ -40,6 +41,7 @@ private:
   void initCallbacks();
 
   void showTutorialWindow();
+  void showLoadingScreen();
 
 private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> mWindow;
@@ -60,8 +62,12 @@ private:
   std::shared_ptr<Texture> mCalibrationTutorialImage;
   std::shared_ptr<Texture> mViewportTutorialImage;
 
-  bool mIsLightTheme = false;
+  Theme mTheme = Theme::Dark;
+  std::vector<std::string> mThemeNames = {"Light", "Dark", "Black"};
+
   std::shared_ptr<std::string> mActiveFolder;
 
   bool mShowTutorial = false;
+  std::shared_ptr<bool> mIsLoading;
+  std::shared_ptr<float> mLoadingFracture;
 };

@@ -40,7 +40,6 @@ void Logger::showLogsInternal() {
     ImGui::Text("%s", log.second.c_str());
     ImGui::PopStyleColor();
   }
-  ImGui::Dummy(ImVec2(0.0f, 2 * ImGui::GetTextLineHeightWithSpacing()));
   if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
     ImGui::SetScrollHereY(1.0f);
   }

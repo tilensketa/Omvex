@@ -22,4 +22,5 @@ private:
   std::unique_ptr<Shader> mRgbShader;
   std::unique_ptr<Shader> mFlatShader;
   std::unique_ptr<Shader> mQuadShader;
+  std::unique_ptr<FBO> mPostProcessFBO;
 };

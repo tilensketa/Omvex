@@ -9,6 +9,8 @@ FBO::FBO(int width, int height) {
 
 void FBO::Bind() const { glBindFramebuffer(GL_FRAMEBUFFER, ID); }
 void FBO::Unbind() const { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+void FBO::BindRead() const { glBindFramebuffer(GL_READ_FRAMEBUFFER, ID); }
+void FBO::BindDraw() const { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ID); }
 void FBO::Delete() {
   if (DepthStencilID != 0) glDeleteRenderbuffers(1, &DepthStencilID);
   if (ID != 0) glDeleteFramebuffers(1, &ID);

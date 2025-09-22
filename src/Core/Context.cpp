@@ -25,14 +25,8 @@ Context::Context(std::string &configsFolder) : mConfigsFolder(configsFolder) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-  GLFWmonitor *primary = glfwGetPrimaryMonitor();
-  int xpos, ypos, width, height;
-  glfwGetMonitorWorkarea(primary, &xpos, &ypos, &width, &height);
-  mWindow = glfwCreateWindow(width, height, "Omvex", nullptr, nullptr);
-  Logger::Info("Window pos: " + GlmToString::Vec2(glm::ivec2(xpos, ypos)));
-  Logger::Info("Window size: " + GlmToString::Vec2(glm::ivec2(width, height)));
+  mWindow = glfwCreateWindow(1000, 1000, "Omvex", nullptr, nullptr);
 
   if (!mWindow) {
     Logger::Error("Failed to initialize window");
@@ -48,6 +42,7 @@ Context::Context(std::string &configsFolder) : mConfigsFolder(configsFolder) {
     Logger::Success("Initialized glad");
   }
 
+  glfwMaximizeWindow(mWindow);
   glfwSwapInterval(0); // 0 means uncapped, 1 would enable V-Sync
 
   setupImGui();

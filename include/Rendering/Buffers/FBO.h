@@ -16,6 +16,9 @@ public:
 
   void Bind() const;
   void Unbind() const;
+
+  void BindRead() const;
+  void BindDraw() const;
   void Delete();
 
   void Resize(int newWidth, int newHeight);

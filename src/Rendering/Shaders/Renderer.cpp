@@ -7,15 +7,17 @@ Renderer::Renderer(const std::string &shadersPath) {
       std::make_unique<Shader>(shadersPath, "flatVert.glsl", "flatFrag.glsl");
   mQuadShader =
       std::make_unique<Shader>(shadersPath, "quadVert.glsl", "quadFrag.glsl");
+  mPostProcessFBO = std::make_unique<FBO>(100, 100);
+
+  glDisable(GL_DITHER);
+  glDisable(GL_BLEND);
+  glDisable(GL_MULTISAMPLE);
 }
 
 void Renderer::Begin(Camera *cam, FBO *fbo, ViewMode *viewMode, Quad *bgQuad) {
   if (!cam || !fbo) return;
 
   glEnable(GL_DEPTH_TEST);
-  glDisable(GL_DITHER);
-  glDisable(GL_BLEND);
-  glDisable(GL_MULTISAMPLE);
   glm::mat4 mat = glm::mat4(1.0f);
   mat[2][2] = -1.0f;
   mRgbShader->Activate();
@@ -51,13 +53,33 @@ void Renderer::RenderModel(Camera *cam, FBO *fbo, ViewMode *viewMode,
   }
 }
 void Renderer::End(Quad *dimQuad, float dim, ViewMode *viewMode, FBO *fbo) {
-  if (*viewMode == ViewMode::Color && fbo) {
+  if (!dimQuad || !fbo || !viewMode || !fbo->ColorTexture) return;
+
+  if (*viewMode == ViewMode::Color) {
+    glm::vec2 size = fbo->ColorTexture->GetSize();
+
+    if (mPostProcessFBO->ColorTexture->GetSize() != size) {
+      mPostProcessFBO->Resize(size.x, size.y);
+    }
+
+    mPostProcessFBO->Bind();
+    glDisable(GL_DEPTH_TEST);
     mQuadShader->Activate();
     fbo->ColorTexture->Bind();
     mQuadShader->SetFloat("uDim", dim);
-    glDisable(GL_DEPTH_TEST);
     dimQuad->Draw();
+    fbo->ColorTexture->Unbind();
+    mPostProcessFBO->Unbind();
     glEnable(GL_DEPTH_TEST);
+
+    mPostProcessFBO->BindRead();
+    fbo->BindDraw();
+
+    glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    fbo->Unbind();
+    mPostProcessFBO->Unbind();
   }
   fbo->Unbind();
 }

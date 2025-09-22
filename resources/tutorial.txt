@@ -1,0 +1,39 @@
+Welcome to the tutorial!
+
+Omvex is a program that generates synthetic images.
+You need to have backgrounds and 3D models.
+
+Omvex has two modes. First one is CameraCalibration, second is Viewport.
+You can switch between them in the menubar [Mode].
+
+Firstly, we want to configure the camera and get parameters.
+Switch mode to [CameraCalibration] if it isn't already.
+
+------------------------
+CAMERA CALIBRATION
+------------------------
+In the right window, you see loaded backgrounds.
+You can add a background with [Open image] or add preconfigured parameters with [Open params].
+
+[image:camera_calibration.png]
+
+Once you add a background, a few options will appear.
+On the main view, you need to set a planar surface (rectangle) that matches the 3D view.
+On the right window, you then set the dimensions of the planar surface along the x and y axes (units [cm]).
+You can also view and set grid points along both axes.
+Once you are happy with the configuration, you can save the parameters.
+Parameters will be saved in the same folder as the background image with the same name but a .json extension.
+You can configure multiple backgrounds and save them all.
+
+Now that you have cameras calibrated, you can switch to [Viewport] mode.
+
+------------------------
+VIEWPORT
+------------------------
+On the right, you can load cameras that you configured (.json) and also 3D models (.obj).
+Now that you have all cameras and models in the scene, you need to set a couple of options.
+First is the dimming effect on cameras, and second is the spawning area where models will be placed.
+You can also change the resolution in the menubar [Settings] -> [Resolution] and test simulation of models with button [Simulate].
+Then you set the number of images you want to render, click [Start Render], and select a folder.
+
+[image:viewport_color.png]

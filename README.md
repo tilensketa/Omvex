@@ -79,18 +79,45 @@ Ensure you have the following installed:
 ## Screenshots
 
 ### Application Preview
-Camera calibration (light, dark, black themes)
+Camera calibration
+![camera_calibration](resources/screenshots/camera_calibration.png)
+Viewport (color, segmenatation)
 <p align="center">
-  <img src="resources/screenshots/camera_calibration_light_09042025.png" width="49%">
-  <img src="resources/screenshots/camera_calibration_dark_09042025.png" width="49%">
-  <img src="resources/screenshots/camera_calibration_black_09042025.png" width="49%">
+  <img src="resources/screenshots/viewport_color.png" width="49%">
+  <img src="resources/screenshots/viewport_segmentation.png" width="49%">
 </p>
-Viewport (shaded, segmented2d, segmented3d modes)
-<p align="center">
-  <img src="resources/screenshots/viewport_shaded_09042025.png" width="49%">
-  <img src="resources/screenshots/viewport_segmented2d_09042025.png" width="49%">
-  <img src="resources/screenshots/viewport_segmented3d_09042025.png" width="49%">
-</p>
+
+## Output Structure
+
+After running Omvex, the generated data will be saved in the output folder with the following structure:
+
+```sh
+.
+├── color/
+├── model_names.txt
+├── poses/
+├── segmentation/
+└── unique_colors.png
+```
+
+### Folder & File Descriptions
+
+- **color/**  
+  Contains the rendered color images of the scene.
+
+- **segmentation/**  
+  Contains segmentation images where each object is represented by a unique color.
+
+- **model_names.txt**  
+  A plain text file listing all model names in the order they appear in the scene. Useful for matching objects with segmentation colors.
+
+- **unique_colors.png**  
+  An image that maps object indices to the corresponding segmentation colors used in the `segmentation/` images.
+
+- **poses/**  
+  Contains `.json` files for each rendered scene. Each file includes:
+  - Object transformations (position, rotation as quaternion)  
+  - Camera matrix used for that generation
 
 ## Author
 Tilen Šketa

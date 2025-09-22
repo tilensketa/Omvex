@@ -59,6 +59,14 @@ endfunction()
 set(OpenCV_DIR "dependencies/opencv/build")
 find_package(OpenCV REQUIRED)
 
+# WARN
+if(WIN32)
+    set(PLATFORM_LIBS ws2_32)
+elseif(UNIX)
+    find_package(X11 REQUIRED)
+    set(PLATFORM_LIBS ${X11_LIBRARIES} pthread dl)
+endif()
+
 FetchAndAddSubdirectory(glfw https://github.com/glfw/glfw.git latest)
 FetchAndAddSubdirectory(glad https://github.com/Dav1dde/glad.git v0.1.34)
 FetchAndAddSubdirectory(glm https://github.com/g-truc/glm.git 1.0.1)
@@ -86,7 +94,7 @@ add_library(imgui STATIC
     ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
-target_link_libraries(imgui PRIVATE glfw OpenGL::GL)
+target_link_libraries(imgui PRIVATE glfw OpenGL::GL ${PLATFORM_LIBS})
 
 FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG master)
 FetchContent_MakeAvailable(stb)
@@ -103,29 +111,40 @@ find_package(OpenGL REQUIRED)
 
 set(SOURCES
     src/main.cpp
-    src/Application.cpp
-    src/Texture.cpp
-    src/CameraCalibrator.cpp
-    src/CameraParameters.cpp
-    src/Viewport.cpp
-    src/Camera.cpp
-    src/VAO.cpp
-    src/VBO.cpp
-    src/EBO.cpp
-    src/Shader.cpp
-    src/Mesh.cpp
-    src/FBO.cpp
-    src/Quad.cpp
-    src/CameraManager.cpp
-    src/PhysicsManager.cpp
-    src/RenderManager.cpp
-    src/ModelManager.cpp
-    src/Model.cpp
-    src/CameraParametersManager.cpp
-    src/Logger.cpp
-    src/FileSystem.cpp
-    src/Utils.cpp
-    src/Serialize.cpp
+
+    src/Core/Logger.cpp
+    src/Core/Application.cpp
+    src/Core/CameraCalibrator.cpp
+    src/Core/Viewport.cpp
+    src/Core/Generator.cpp
+    src/Core/Context.cpp
+
+    src/Core/Loaders/TutorialLoader.cpp
+    src/Core/Loaders/ExampleLoader.cpp
+
+    src/Core/Camera/Camera.cpp
+    src/Core/Camera/CameraMath.cpp
+    src/Core/Camera/CameraParameters.cpp
+
+    src/Managers/CameraParametersManager.cpp
+    src/Managers/ModelManager.cpp
+    src/Managers/CameraManager.cpp
+    src/Managers/PhysicsManager.cpp
+
+    src/Rendering/Textures/Texture.cpp
+    src/Rendering/Shaders/Shader.cpp
+    src/Rendering/Shaders/Renderer.cpp
+    src/Rendering/Models/Model.cpp
+    src/Rendering/Models/Mesh.cpp
+    src/Rendering/Models/Quad.cpp
+    src/Rendering/Buffers/FBO.cpp
+
+    src/Utilities/FileSystem.cpp
+    src/Utilities/GlmToString.cpp
+    src/Utilities/GlmToCv.cpp
+    src/Utilities/CvToGlm.cpp
+    src/Utilities/ImGuiHelpers.cpp
+
     # Add other source files here if any
 )
 
@@ -143,6 +162,7 @@ target_link_libraries(Omvex PRIVATE
     imgui
     stb_image
     pfd
+    ${PLATFORM_LIBS}
 )
 
 target_include_directories(Omvex PRIVATE
